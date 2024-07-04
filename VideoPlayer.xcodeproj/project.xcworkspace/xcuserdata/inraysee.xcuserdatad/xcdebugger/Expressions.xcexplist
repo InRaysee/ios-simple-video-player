@@ -3,10 +3,29 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "closure #1 in MediaPage.VideoSeekerView(_:):MediaPage.swift">
+         contextName = "MediaPage.VideoSeekerView(_:):MediaPage.swift">
       </ContextState>
       <ContextState
-         contextName = "MediaPage.VideoSeekerView(_:):MediaPage.swift">
+         contextName = "closure #1 in MediaPage.body.getter:MediaPage.swift">
+      </ContextState>
+      <ContextState
+         contextName = "myViewController.viewDidLoad():WebrtcPlayer.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "size">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #4 in closure #1 in WebrtcMediaPage.body.getter:WebrtcMediaPage.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "$isPresent">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in MediaPage.VideoSeekerView(_:):MediaPage.swift">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

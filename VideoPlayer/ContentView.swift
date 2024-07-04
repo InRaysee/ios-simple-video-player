@@ -21,22 +21,29 @@ struct ContentView: View {
                 MediaPage(size: size, safeArea: safeArea)
                     .preferredColorScheme(.none)
                     .tabItem {
-                        Label("Local", systemImage: "record.circle")
+                        Label("Local", systemImage: "play.circle")
                     }
                     .tag(0)
                 
                 NetworkSourcePage(size: size, safeArea: safeArea)
                     .preferredColorScheme(.none)
                     .tabItem {
-                        Label("Network", systemImage: "livephoto")
+                        Label("Network", systemImage: "livephoto.play")
                     }
                     .tag(1)
+                
+                WebrtcMediaPage(size: size, safeArea: safeArea)
+                    .preferredColorScheme(.none)
+                    .tabItem {
+                        Label("Chat", systemImage: "livephoto")
+                    }
+                    .tag(2)
             }
             .onAppear {
                 UITabBar.appearance().backgroundColor = .white
+                UITabBar.appearance().unselectedItemTintColor = .gray
+                UITabBar.appearance().tintColor = .tintColor
             }
-            
-
         }
     }
 }

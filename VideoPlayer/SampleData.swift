@@ -21,7 +21,8 @@ class SampleData {
     private init() {
         let schema = Schema([
             Media.self,
-            NetworkSource.self
+            NetworkSource.self,
+            WebrtcMedia.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
 
@@ -56,5 +57,9 @@ class SampleData {
     
     var networkSource: NetworkSource {
         NetworkSource.sampleData[0]
+    }
+    
+    var webrtcMedia: WebrtcMedia {
+        WebrtcMedia.sampleData[0]
     }
 }

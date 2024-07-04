@@ -34,7 +34,8 @@ struct MediaDetail: View {
                     .padding(5)
                     .border(.gray)
             }
-            
+            .listRowBackground(Color.white)
+
             HStack(spacing: 4.0) {
                 Text("File: ")
                     .fontWeight(.semibold)
@@ -58,8 +59,12 @@ struct MediaDetail: View {
                     .padding(5)
                     .border(.gray)
             }
+            .listRowBackground(Color.white)
         }
+        .scrollContentBackground(.hidden)
+        .background(.myBackground)
         .navigationTitle("New Media")
+        .foregroundStyle(.black)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
@@ -74,6 +79,9 @@ struct MediaDetail: View {
                     dismiss()
                 }
             }
+        }
+        .onAppear {
+            UINavigationBar.appearance().titleTextAttributes = [ .foregroundColor: UIColor(.black)]
         }
     }
 }

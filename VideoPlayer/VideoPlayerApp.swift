@@ -13,7 +13,8 @@ struct VideoPlayerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Media.self,
-            NetworkSource.self
+            NetworkSource.self,
+            WebrtcMedia.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

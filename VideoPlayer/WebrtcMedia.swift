@@ -1,5 +1,5 @@
 //
-//  NetworkSource.swift
+//  WebrtcMedia.swift
 //  VideoPlayer
 //
 //  Created by InRaysee on 2024/7/3.
@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-class NetworkSource {
+class WebrtcMedia {
     var title: String
     var mediaURL: String
     
@@ -19,6 +19,6 @@ class NetworkSource {
     }
     
     static let sampleData = [
-        NetworkSource(title: "Bunny", mediaURL: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps_1024x576_2500k.mp4")
+        WebrtcMedia(title: "A", mediaURL: "http://10.12.190.215")
     ]
 }

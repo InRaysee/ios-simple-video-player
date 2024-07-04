@@ -1,5 +1,5 @@
 //
-//  NetworkSourceDetail.swift
+//  WebrtcMediaDetail.swift
 //  VideoPlayer
 //
 //  Created by InRaysee on 2024/7/3.
@@ -8,15 +8,15 @@
 import SwiftUI
 import SwiftData
 
-struct NetworkSourceDetail: View {
-    @Bindable var networkSource: NetworkSource
+struct WebrtcMediaDetail: View {
+    @Bindable var webrtcMedia: WebrtcMedia
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     
-    @Query(sort: \NetworkSource.title) private var networkSources: [NetworkSource]
+    @Query(sort: \WebrtcMedia.title) private var webrtcMedias: [WebrtcMedia]
     
-    init(networkSource: NetworkSource) {
-        self.networkSource = networkSource
+    init(webrtcMedia: WebrtcMedia) {
+        self.webrtcMedia = webrtcMedia
     }
     
     var body: some View {
@@ -27,7 +27,7 @@ struct NetworkSourceDetail: View {
                 
                 Spacer()
                 
-                TextField("title", text: $networkSource.title)
+                TextField("title", text: $webrtcMedia.title)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .frame(width: 233)
@@ -42,7 +42,7 @@ struct NetworkSourceDetail: View {
                 
                 Spacer()
                 
-                TextField("URL", text: $networkSource.mediaURL)
+                TextField("URL", text: $webrtcMedia.mediaURL)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .frame(width: 233)
@@ -53,19 +53,19 @@ struct NetworkSourceDetail: View {
         }
         .scrollContentBackground(.hidden)
         .background(.myBackground)
-        .navigationTitle("New NetworkSource")
+        .navigationTitle("New WebrtcMedia")
         .foregroundStyle(.black)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
                     dismiss()
                 }
-                .disabled(networkSource.title.isEmpty || networkSource.mediaURL.isEmpty)
+                .disabled(webrtcMedia.title.isEmpty || webrtcMedia.mediaURL.isEmpty)
             }
             
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
-                    modelContext.delete(networkSource)
+                    modelContext.delete(webrtcMedia)
                     dismiss()
                 }
             }
@@ -78,7 +78,7 @@ struct NetworkSourceDetail: View {
 
 #Preview {
     NavigationStack {
-        NetworkSourceDetail(networkSource: SampleData.shared.networkSource)
+        WebrtcMediaDetail(webrtcMedia: SampleData.shared.webrtcMedia)
             .navigationBarTitleDisplayMode(.inline)
     }
     .modelContainer(SampleData.shared.modelContainer)

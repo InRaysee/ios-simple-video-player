@@ -41,8 +41,13 @@ struct MediaPage: View {
     
     var body: some View {
         
-        VStack {
+        VStack(spacing: 0) {
             let videoPlayerSize: CGSize = .init(width: size.width, height: size.width / 16 * 9)
+            
+            Rectangle()
+                .fill(.black)
+                .frame(height: safeArea.top)
+                .padding(0)
 
             ZStack {
                 if let player {
@@ -199,7 +204,10 @@ struct MediaPage: View {
                         }
                         .interactiveDismissDisabled()
                     }
+                    .foregroundStyle(.tint)
                 }
+                .foregroundStyle(.gray)
+                .listRowBackground(Color.white)
             }
             .scrollContentBackground(.hidden)
             
@@ -210,8 +218,19 @@ struct MediaPage: View {
                 .fontWeight(.light)
                 .foregroundStyle(.gray)
                 .padding(.top, 5)
-                .padding(.bottom, 10)
+            
+            Button {
+                guard let url = URL(string: "http://sinc-lab.cse.hust.edu.cn/") else { return }
+                UIApplication.shared.open(url)
+            } label: {
+                Text("Learn more...")
+                    .font(.system(size: 12))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.gray)
+            }
+            .padding(.bottom, 10)
         }
+        .ignoresSafeArea(edges: .top)
         .background(.myBackground)
     }
     
