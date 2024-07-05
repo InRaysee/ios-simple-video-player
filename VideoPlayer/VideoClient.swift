@@ -8,29 +8,40 @@
 import Foundation
 import AVFoundation
 import Network
+import SwiftUI
 
 /// Abstract: An object to capture video data, encode it and finally send it to the server
 class VideoClient {
     
     // MARK: - dependencies
     
-    private lazy var captureManager = VideoCaptureManager()
-    private lazy var videoEncoder = H264Encoder()
-    private lazy var tcpClient = TCPClient()
+    private var captureManager: VideoCaptureManager?
+    private var videoEncoder: H264Encoder?
+    private var tcpClient: TCPClient?
+    
+    @Binding var session: AVCaptureSession
+    
+    init(session: Binding<AVCaptureSession>) {
+        self._session = session
+    }
     
     func connect(to ipAddress: String, with port: UInt16) throws {
-        try tcpClient.connect(to: ipAddress, with: port)
+        captureManager = VideoCaptureManager(session: $session)
+        videoEncoder = H264Encoder()
+        tcpClient = TCPClient()
+        
+        try tcpClient?.connect(to: ipAddress, with: port)
     }
     
     func startSendingVideoToServer() throws {
-        try videoEncoder.configureCompressSession()
+        try videoEncoder?.configureCompressSession()
         
-        captureManager.setVideoOutputDelegate(with: videoEncoder)
+        captureManager?.setVideoOutputDelegate(with: videoEncoder!)
         
         // if connection is not established, 'send(:)' method in TCPClient doesn't
         // have any effect so it's okay to send data before establishing connection
-        videoEncoder.naluHandling = { [unowned self] data in
-            tcpClient.send(data: data)
+        videoEncoder?.naluHandling = { [unowned self] data in
+            tcpClient?.send(data: data)
         }
     }
 }

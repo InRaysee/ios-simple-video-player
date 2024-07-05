@@ -17,13 +17,17 @@ struct WebrtcMediaPage: View {
     @Environment(\.modelContext) private var context
     
     @State private var newWebrtcMedia: WebrtcMedia?
-    
-    @State private var player: AVSampleBufferDisplayLayer? = .init()
-    @State private var videoClient: VideoClient = .init()
 
     @State private var showPlayerControls: Bool = false
     @State private var isPresent: Bool = false
     @State private var isPlaying: Bool = false
+    @State private var endPoint: String = ""
+
+    @State private var player: AVSampleBufferDisplayLayer = .init()
+    @State private var videoClient: VideoClient?
+    @State private var videoServer: VideoServer?
+    @State private var session: AVCaptureSession = .init()
+
     @State private var timeoutTask: DispatchWorkItem?
     
     init(size: CGSize, safeArea: EdgeInsets) {
@@ -45,9 +49,64 @@ struct WebrtcMediaPage: View {
                 Rectangle()
                     .fill(.black)
                 
-                if let player {
-                    WebrtcPlayer(layer: player, videoPlayerSize: videoPlayerSize, isPresent: $isPresent, isPlaying: $isPlaying)
-                        .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
+                WebrtcPlayer(layer: player, videoPlayerSize: videoPlayerSize, isPresent: $isPresent)
+                    .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
+                    .overlay {
+                        Rectangle()
+                            .fill(.black.opacity(0.4))
+                            .opacity(showPlayerControls ? 1 : 0)
+                            .overlay {
+                                // Customized Playback Controls
+                                PlayBackControls()
+                            }
+                            .overlay(alignment: .bottom) {
+                                Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+                                    .font(.system(size: 12))
+                                    .fontWeight(.light)
+                                    .foregroundStyle(.white)
+                                    .padding(.top, 5)
+                                    .padding(.bottom, 10)
+                                    .background(Color.black.opacity(0.5))
+                                    .opacity(showPlayerControls ? 1 : 0)
+                            }
+                    }
+            }
+            .onAppear {
+                if self.videoServer == nil {
+                    self.videoServer = .init(layer: player, isPlaying: $isPlaying, endPoint: $endPoint)
+                }
+                
+                if self.videoClient == nil {
+                    self.videoClient = .init(session: $session)
+                }
+            }
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    showPlayerControls.toggle()
+                }
+                timeoutControls()
+            }
+            .overlay {
+                Text("Waiting to be called...")
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .opacity(isPlaying ? 0 : 1)
+            }
+            .overlay {
+                Text("Session from: \(endPoint)")
+                    .fontWeight(.light)
+                    .foregroundStyle(.white)
+                    .opacity(isPlaying && showPlayerControls ? 1 : 0)
+            }
+            .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
+            .fullScreenCover(isPresented: $isPresent, content: {
+                ZStack {
+                    Rectangle()
+                        .fill(.black)
+                    
+                    WebrtcPlayer(layer: player, videoPlayerSize: videoPlayerSize, isPresent: $isPresent)
                         .overlay {
                             Rectangle()
                                 .fill(.black.opacity(0.4))
@@ -70,50 +129,6 @@ struct WebrtcMediaPage: View {
                                 }
                         }
                 }
-            }
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    showPlayerControls.toggle()
-                }
-                timeoutControls()
-            }
-            .overlay {
-                Text("Video source unselected.")
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-                    .opacity(isPlaying ? 0 : 1)
-            }
-            .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
-            .fullScreenCover(isPresented: $isPresent, content: {
-                ZStack {
-                    Rectangle()
-                        .fill(.black)
-                    
-                    if let player {
-                        WebrtcPlayer(layer: player, videoPlayerSize: videoPlayerSize, isPresent: $isPresent, isPlaying: $isPlaying)
-                            .overlay {
-                                Rectangle()
-                                    .fill(.black.opacity(0.4))
-                                    .opacity(showPlayerControls ? 1 : 0)
-                                    .overlay {
-                                        // Customized Playback Controls
-                                        PlayBackControls()
-                                    }
-                                    .overlay(alignment: .bottom) {
-                                        Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
-                                            .multilineTextAlignment(.center)
-                                            .frame(maxWidth: .infinity)
-                                            .font(.system(size: 12))
-                                            .fontWeight(.light)
-                                            .foregroundStyle(.white)
-                                            .padding(.top, 5)
-                                            .padding(.bottom, 10)
-                                            .background(Color.black.opacity(0.5))
-                                            .opacity(showPlayerControls ? 1 : 0)
-                                    }
-                            }
-                    }
-                }
                 .onTapGesture {
                     withAnimation(.easeInOut(duration: 0.35)) {
                         showPlayerControls.toggle()
@@ -121,13 +136,35 @@ struct WebrtcMediaPage: View {
                     timeoutControls()
                 }
                 .overlay {
-                    Text("Video source unselected.")
+                    Text("Waiting to be called...")
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
                         .opacity(isPlaying ? 0 : 1)
                 }
+                .overlay {
+                    Text("Session from: \(endPoint)")
+                        .fontWeight(.light)
+                        .foregroundStyle(.white)
+                        .opacity(isPlaying && showPlayerControls ? 1 : 0)
+                }
                 .background(.black)
             })
+            
+            Divider()
+            
+            ZStack {
+                Rectangle()
+                    .fill(.black)
+                
+                CameraPreview(session: session)
+            }
+            .overlay {
+                Text("Camera preview")
+                    .fontWeight(.light)
+                    .foregroundStyle(.white)
+                    .shadow(radius: 10)
+            }
+            .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
             
             Form {
                 Section("Select a media source to load:") {
@@ -135,8 +172,8 @@ struct WebrtcMediaPage: View {
                         HStack {
                             Button("\(webrtcMedia.title)") {
                                 do {
-                                    try videoClient.connect(to: webrtcMedia.mediaURL, with: 12005)
-                                    try videoClient.startSendingVideoToServer()
+                                    try videoClient?.connect(to: webrtcMedia.mediaURL, with: 12005)
+                                    try videoClient?.startSendingVideoToServer()
                                 } catch {
                                     print("error occured : \(error.localizedDescription)")
                                 }
@@ -169,7 +206,7 @@ struct WebrtcMediaPage: View {
                 .listRowBackground(Color.white)
             }
             .scrollContentBackground(.hidden)
-            
+                        
             Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)

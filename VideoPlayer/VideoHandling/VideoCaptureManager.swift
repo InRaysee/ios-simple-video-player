@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import SwiftUI
 
 /// Absract: An facade Object configuring AVCaptureSession and managing it.
 ///
@@ -27,7 +28,7 @@ class VideoCaptureManager {
     
     // MARK: - dependencies
     
-    private let session = AVCaptureSession()
+    @Binding var session: AVCaptureSession
     private let videoOutput = AVCaptureVideoDataOutput()
     
     // MARK: - DispatchQueues to make the most of multithreading
@@ -39,7 +40,8 @@ class VideoCaptureManager {
     
     private var setupResult: SessionSetupResult = .success
     
-    init() {
+    init(session: Binding<AVCaptureSession>) {
+        self._session = session
         sessionQueue.async {
             self.requestCameraAuthorizationIfNeeded()
         }
@@ -89,10 +91,16 @@ class VideoCaptureManager {
             try addVideoDeviceInputToSession()
             try addVideoOutputToSession()
             
-            if let connection = session.connections.first {
-                connection.videoOrientation = .portrait
-//                connection.videoRotationAngle = 0
-            }
+//            ForEach(session.connections) { connection in
+//                connection.videoRotationAngle = 90
+//            }
+            
+//            if let connection = session.connections.first {
+////                connection.videoOrientation = .portrait
+//                connection.videoRotationAngle = 90
+//            }
+            session.connections[0].videoRotationAngle = 90
+            session.connections[1].videoRotationAngle = 90
         } catch {
             print("error ocurred : \(error.localizedDescription)")
             return

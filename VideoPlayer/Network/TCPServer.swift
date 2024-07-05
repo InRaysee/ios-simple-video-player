@@ -7,6 +7,7 @@
 
 import Foundation
 import Network
+import SwiftUI
 
 /// Abstract: TCP server that can listen to port and accept connection,
 /// receive data
@@ -22,10 +23,17 @@ class TCPServer {
     
     lazy var listeningQueue = DispatchQueue.init(label: "tcp_server_queue")
     lazy var connectionQueue = DispatchQueue.init(label: "connection_queue")
+    
+    @Binding var endPoint: String
         
     var listener: NWListener?
     
     var recievedDataHandling: ((Data) -> Void)?
+    
+    // MARK: - init
+    init(endPoint: Binding<String>) {
+        self._endPoint = endPoint
+    }
     
     // MARK: - methods
     
@@ -46,6 +54,7 @@ class TCPServer {
         }
         
         listener?.newConnectionHandler = { [unowned self] connection in
+            endPoint = "\(connection.endpoint)"
             print("connection requested --> \(connection.endpoint)")
             
             connection.stateUpdateHandler = { [unowned self] state in

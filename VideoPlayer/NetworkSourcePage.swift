@@ -111,6 +111,10 @@ struct NetworkSourcePage: View {
                     }
                 })
             }
+            .onDisappear {
+                player?.pause()
+                isPlaying = false
+            }
             .fullScreenCover(isPresented: $isPresent, content: {
                 ZStack {
                     if let player {

@@ -45,6 +45,7 @@ struct ContentView: View {
                 UITabBar.appearance().tintColor = .tintColor
             }
         }
+        .statusBar(hidden: false)
     }
 }
 

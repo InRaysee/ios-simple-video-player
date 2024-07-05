@@ -17,17 +17,13 @@ class myViewController: UIViewController {
     var shouldBePresent: Bool
     var isFinishPresent: Bool
     @Binding var isPresent: Bool
-    @Binding var isPlaying: Bool
-
-    let videoServer = VideoServer()
     
-    init(layer: AVSampleBufferDisplayLayer, videoPlayerSize: CGSize, isPresent: Binding<Bool>, isPlaying: Binding<Bool>) {
+    init(layer: AVSampleBufferDisplayLayer, videoPlayerSize: CGSize, isPresent: Binding<Bool>) {
         self.layer = layer
         self.videoPlayerSize = videoPlayerSize
         self.shouldBePresent = isPresent.wrappedValue
         self.isFinishPresent = true
         self._isPresent = isPresent
-        self._isPlaying = isPlaying
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -53,16 +49,6 @@ class myViewController: UIViewController {
             }
 //            print("shouldBePresent: \(self.shouldBePresent ? 1 : 0), isPresent: \(self.isPresent ? 1 : 0), isFinishPresent: \(self.isFinishPresent ? 1 : 0)")
         })
-        
-        do {
-            try videoServer.start(on: 12005)
-            videoServer.setSampleBufferCallback { [layer] sample in
-                layer.enqueue(sample)
-                self.isPlaying = true
-            }
-        } catch {
-            print(error.localizedDescription)
-        }
     }
 }
 
@@ -73,11 +59,10 @@ struct WebrtcPlayer: UIViewControllerRepresentable {
     var layer: AVSampleBufferDisplayLayer
     var videoPlayerSize: CGSize
     @Binding var isPresent: Bool
-    @Binding var isPlaying: Bool
 
     func makeUIViewController(context: Context) -> UIViewController {
         if controllerFS == nil {
-            let controller = myViewController(layer: layer, videoPlayerSize: videoPlayerSize, isPresent: $isPresent, isPlaying: $isPlaying)
+            let controller = myViewController(layer: layer, videoPlayerSize: videoPlayerSize, isPresent: $isPresent)
             if isPresent {
                 controllerFS = controller
             }

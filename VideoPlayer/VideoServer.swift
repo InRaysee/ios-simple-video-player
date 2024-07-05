@@ -6,40 +6,67 @@
 //
 
 import Foundation
+import SwiftUI
 import CoreMedia
+import AVKit
 
 class VideoServer {
     
     // MARK: - dependencies
     
-    private let server = TCPServer()
-    private let naluParser = NALUParser()
-    private let h264Converter = H264Converter()
+    private var server: TCPServer?
+    private var naluParser: NALUParser?
+    private var h264Converter: H264Converter?
+    
+    @Binding var isPlaying: Bool
+    @Binding var endPoint: String
+    
+    // MARK: - init methods
+    init(layer: AVSampleBufferDisplayLayer, isPlaying: Binding<Bool>, endPoint: Binding<String>) {
+        self._isPlaying = isPlaying
+        self._endPoint = endPoint
+        
+
+        
+        do {
+            try self.start(on: 12005)
+            self.setSampleBufferCallback { [layer] sample in
+                layer.enqueue(sample)
+                self.isPlaying = true
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
     
     // MARK: - task methods
     
     func start(on port: UInt16) throws {
-        try server.start(port: port)
+        server = TCPServer(endPoint: self.$endPoint)
+        naluParser = NALUParser()
+        h264Converter = H264Converter()
+        
+        try server?.start(port: port)
         
         setServerDataHandling()
         setNALUParserHandling()
     }
     
     func setSampleBufferCallback(_ callback: @escaping (CMSampleBuffer) -> Void) {
-        h264Converter.sampleBufferCallback = callback
+        h264Converter?.sampleBufferCallback = callback
     }
     
     // MARK: - helper methods
     
     private func setServerDataHandling() {
-        server.recievedDataHandling = { [naluParser] data in
-            naluParser.enqueue(data)
+        server?.recievedDataHandling = { [naluParser] data in
+            naluParser?.enqueue(data)
         }
     }
     
     private func setNALUParserHandling() {
-        naluParser.h264UnitHandling = { [h264Converter] h264Unit in
-            h264Converter.convert(h264Unit)
+        naluParser?.h264UnitHandling = { [h264Converter] h264Unit in
+            h264Converter?.convert(h264Unit)
         }
     }
 }
