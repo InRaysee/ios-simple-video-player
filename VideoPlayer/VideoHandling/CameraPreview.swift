@@ -10,7 +10,10 @@ import AVFoundation
 
 class PreviewView: UIView {
     
-    init() {
+    @Binding private var previewLayer1: AVCaptureVideoPreviewLayer
+    
+    init(previewLayer: Binding<AVCaptureVideoPreviewLayer>) {
+        self._previewLayer1 = previewLayer
         super.init(frame: .zero)
     }
     
@@ -22,7 +25,7 @@ class PreviewView: UIView {
     override class var layerClass: AnyClass {
         AVCaptureVideoPreviewLayer.self
     }
-    
+
     var previewLayer: AVCaptureVideoPreviewLayer {
         layer as! AVCaptureVideoPreviewLayer
     }
@@ -36,14 +39,16 @@ class PreviewView: UIView {
 
 struct CameraPreview: UIViewRepresentable {
     
-    private let session: AVCaptureSession
+    private var session: AVCaptureSession
+    @Binding private var layer: AVCaptureVideoPreviewLayer
 
-    init(session: AVCaptureSession) {
+    init(session: AVCaptureSession, layer: Binding<AVCaptureVideoPreviewLayer>) {
         self.session = session
+        self._layer = layer
     }
     
     func makeUIView(context: Context) -> PreviewView {
-        let preview = PreviewView()
+        let preview = PreviewView(previewLayer: $layer)
         // Connect the preview layer to the capture session.
         preview.setSession(session: session)
         return preview

@@ -18,18 +18,25 @@ struct WebrtcMediaPage: View {
     
     @State private var newWebrtcMedia: WebrtcMedia?
 
-    @State private var showPlayerControls: Bool = false
+    @State private var showServerPlayerControls: Bool = false
+    @State private var showClientPlayerControls: Bool = false
     @State private var isPresent: Bool = false
     @State private var isPlaying: Bool = false
+    @State private var isPipMode: Bool = false
     @State private var endPoint: String = ""
 
     @State private var player: AVSampleBufferDisplayLayer = .init()
+    @State private var preview: AVCaptureVideoPreviewLayer = .init()
     @State private var videoClient: VideoClient?
     @State private var videoServer: VideoServer?
     @State private var session: AVCaptureSession = .init()
 
-    @State private var timeoutTask: DispatchWorkItem?
+    @State private var serverTimeoutTask: DispatchWorkItem?
+    @State private var clientTimeoutTask: DispatchWorkItem?
     
+    @State private var pipController: AVPictureInPictureController!
+    @State private var pipPossibleObservation: NSKeyValueObservation?
+
     init(size: CGSize, safeArea: EdgeInsets) {
         self.size = size
         self.safeArea = safeArea
@@ -54,10 +61,10 @@ struct WebrtcMediaPage: View {
                     .overlay {
                         Rectangle()
                             .fill(.black.opacity(0.4))
-                            .opacity(showPlayerControls ? 1 : 0)
+                            .opacity(showServerPlayerControls ? 1 : 0)
                             .overlay {
                                 // Customized Playback Controls
-                                PlayBackControls()
+                                ServerPlayBackControls()
                             }
                             .overlay(alignment: .bottom) {
                                 Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
@@ -69,7 +76,7 @@ struct WebrtcMediaPage: View {
                                     .padding(.top, 5)
                                     .padding(.bottom, 10)
                                     .background(Color.black.opacity(0.5))
-                                    .opacity(showPlayerControls ? 1 : 0)
+                                    .opacity(showServerPlayerControls ? 1 : 0)
                             }
                     }
             }
@@ -84,9 +91,9 @@ struct WebrtcMediaPage: View {
             }
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.35)) {
-                    showPlayerControls.toggle()
+                    showServerPlayerControls.toggle()
                 }
-                timeoutControls()
+                ServerTimeoutControls()
             }
             .overlay {
                 Text("Waiting to be called...")
@@ -98,7 +105,7 @@ struct WebrtcMediaPage: View {
                 Text("Session from: \(endPoint)")
                     .fontWeight(.light)
                     .foregroundStyle(.white)
-                    .opacity(isPlaying && showPlayerControls ? 1 : 0)
+                    .opacity(isPlaying && showServerPlayerControls ? 1 : 0)
             }
             .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
             .fullScreenCover(isPresented: $isPresent, content: {
@@ -110,10 +117,10 @@ struct WebrtcMediaPage: View {
                         .overlay {
                             Rectangle()
                                 .fill(.black.opacity(0.4))
-                                .opacity(showPlayerControls ? 1 : 0)
+                                .opacity(showServerPlayerControls ? 1 : 0)
                                 .overlay {
                                     // Customized Playback Controls
-                                    PlayBackControls()
+                                    ServerPlayBackControls()
                                 }
                                 .overlay(alignment: .bottom) {
                                     Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
@@ -125,27 +132,21 @@ struct WebrtcMediaPage: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, 10)
                                         .background(Color.black.opacity(0.5))
-                                        .opacity(showPlayerControls ? 1 : 0)
+                                        .opacity(showServerPlayerControls ? 1 : 0)
                                 }
                         }
                 }
                 .onTapGesture {
                     withAnimation(.easeInOut(duration: 0.35)) {
-                        showPlayerControls.toggle()
+                        showServerPlayerControls.toggle()
                     }
-                    timeoutControls()
+                    ServerTimeoutControls()
                 }
                 .overlay {
                     Text("Waiting to be called...")
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
                         .opacity(isPlaying ? 0 : 1)
-                }
-                .overlay {
-                    Text("Session from: \(endPoint)")
-                        .fontWeight(.light)
-                        .foregroundStyle(.white)
-                        .opacity(isPlaying && showPlayerControls ? 1 : 0)
                 }
                 .background(.black)
             })
@@ -156,13 +157,34 @@ struct WebrtcMediaPage: View {
                 Rectangle()
                     .fill(.black)
                 
-                CameraPreview(session: session)
+                CameraPreview(session: session, layer: $preview)
+                    .overlay {
+                        Rectangle()
+                            .fill(.black.opacity(0.4))
+                            .opacity(showClientPlayerControls ? 1 : 0)
+                            .overlay {
+                                // Customized Playback Controls
+                                ClientPlayBackControls()
+                            }
+                            .overlay(alignment: .bottom) {
+                                Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+                                    .font(.system(size: 12))
+                                    .fontWeight(.light)
+                                    .foregroundStyle(.white)
+                                    .padding(.top, 5)
+                                    .padding(.bottom, 10)
+                                    .background(Color.black.opacity(0.5))
+                                    .opacity(showClientPlayerControls ? 1 : 0)
+                            }
+                    }
             }
-            .overlay {
-                Text("Camera preview")
-                    .fontWeight(.light)
-                    .foregroundStyle(.white)
-                    .shadow(radius: 10)
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    showClientPlayerControls.toggle()
+                }
+                ClientTimeoutControls()
             }
             .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
             
@@ -248,7 +270,7 @@ struct WebrtcMediaPage: View {
     
     // Customized Playback Controls
     @ViewBuilder
-    func PlayBackControls() -> some View {
+    func ServerPlayBackControls() -> some View {
         ZStack {
             Button {
                 isPresent.toggle()
@@ -264,26 +286,93 @@ struct WebrtcMediaPage: View {
                     }
             }
             .position(CGPoint(x: 30.0, y: 35.0))
+            
+            Text("Session from: \(endPoint)")
+                .fontWeight(.light)
+                .foregroundStyle(.white)
+                .shadow(radius: 10)
         }
-        .opacity(showPlayerControls ? 1 : 0)
-        .animation(.easeInOut(duration: 0.25), value: showPlayerControls)
+        .opacity(showServerPlayerControls ? 1 : 0)
+        .animation(.easeInOut(duration: 0.25), value: showServerPlayerControls)
     }
     
-    func timeoutControls() {
-        if let timeoutTask {
-            timeoutTask.cancel()
+    // Customized Playback Controls
+    @ViewBuilder
+    func ClientPlayBackControls() -> some View {
+        VStack {
+            Text("Camera preview")
+                .fontWeight(.light)
+                .foregroundStyle(.white)
+                .shadow(radius: 10)
+            
+            Button {
+                isPipMode.toggle()
+            } label: {
+                Image(systemName: isPipMode ? "pip.exit" : "pip.enter")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(15)
+                    .background {
+                        Circle()
+                            .fill(.black.opacity(0.35))
+                    }
+            }
+        }
+        .opacity(showClientPlayerControls ? 1 : 0)
+        .animation(.easeInOut(duration: 0.25), value: showClientPlayerControls)
+    }
+    
+    func ServerTimeoutControls() {
+        if let serverTimeoutTask {
+            serverTimeoutTask.cancel()
         }
         
-        timeoutTask = .init(block: {
+        serverTimeoutTask = .init(block: {
             withAnimation(.easeInOut(duration: 0.35)) {
-                showPlayerControls = false
+                showServerPlayerControls = false
             }
         })
         
-        if let timeoutTask {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: timeoutTask)
+        if let serverTimeoutTask {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: serverTimeoutTask)
         }
     }
+    
+    func ClientTimeoutControls() {
+        if let clientTimeoutTask {
+            clientTimeoutTask.cancel()
+        }
+        
+        clientTimeoutTask = .init(block: {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                showClientPlayerControls = false
+            }
+        })
+        
+        if let clientTimeoutTask {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: clientTimeoutTask)
+        }
+    }
+    
+//    func setupPictureinPicture() {
+//        // Ensure PiP is supported by current device.
+//        if AVPictureInPictureController.isPictureInPictureSupported() {
+//            // Create a new controller, passing the reference to the AVPlayerLayer.
+//            pipController = AVPictureInPictureController(playerLayer: playerLayer)
+//            pipController.delegate = self
+//
+//
+//            pipPossibleObservation = pipController.observe(\AVPictureInPictureController.isPictureInPicturePossible,
+//    options: [.initial, .new]) { [weak self] _, change in
+//                // Update the PiP button's enabled state.
+//                self?.pipButton.isEnabled = change.newValue ?? false
+//            }
+//        } else {
+//            // PiP isn't supported by the current device. Disable the PiP button.
+//            pipButton.isEnabled = false
+//        }
+//    }
 }
 
 #Preview {
