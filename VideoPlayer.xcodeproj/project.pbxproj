@@ -52,6 +52,7 @@
 		6985F3662C37A6040018A7FF /* ContentView1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F3652C37A6040018A7FF /* ContentView1.swift */; };
 		6985F3682C37AADC0018A7FF /* RepresentableCameraFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F3672C37AADC0018A7FF /* RepresentableCameraFeed.swift */; };
 		6985F36A2C37BF350018A7FF /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F3692C37BF350018A7FF /* CameraPreview.swift */; };
+		9E2776032CC79E7900312E14 /* DeviceSelectionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -101,6 +102,7 @@
 		6985F3652C37A6040018A7FF /* ContentView1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView1.swift; sourceTree = "<group>"; };
 		6985F3672C37AADC0018A7FF /* RepresentableCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepresentableCameraFeed.swift; sourceTree = "<group>"; };
 		6985F3692C37BF350018A7FF /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
+		9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSelectionDetail.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,6 +183,7 @@
 				6985F3652C37A6040018A7FF /* ContentView1.swift */,
 				6973D0AB2C3592B000F48E7C /* NetworkSourcePage.swift */,
 				691E56BA2C3697A90077B853 /* WebrtcMediaPage.swift */,
+				9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */,
 				6973D0AF2C35CAAD00F48E7C /* MediaPage.swift */,
 				6973D0A72C35828E00F48E7C /* MediaDetail.swift */,
 				6973D0AD2C35947C00F48E7C /* NetworkSourceDetail.swift */,
@@ -319,6 +322,7 @@
 				6973D0B02C35CAAD00F48E7C /* MediaPage.swift in Sources */,
 				691E56BD2C3697E90077B853 /* WebrtcMedia.swift in Sources */,
 				6973D0AC2C3592B000F48E7C /* NetworkSourcePage.swift in Sources */,
+				9E2776032CC79E7900312E14 /* DeviceSelectionDetail.swift in Sources */,
 				691E56D92C36A4A20077B853 /* H264Unit.swift in Sources */,
 				6985F3642C37A27C0018A7FF /* ThumbnailView.swift in Sources */,
 				6973D0A82C35828E00F48E7C /* MediaDetail.swift in Sources */,

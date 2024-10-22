@@ -25,8 +25,8 @@ class VideoClient {
         self._session = session
     }
     
-    func connect(to ipAddress: String, with port: UInt16) throws {
-        captureManager = VideoCaptureManager(session: $session)
+    func connect(to ipAddress: String, with port: UInt16, device: AVCaptureDevice) throws {
+        captureManager = VideoCaptureManager(session: $session, device: device)
         videoEncoder = H264Encoder()
         tcpClient = TCPClient()
         

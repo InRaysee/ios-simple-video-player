@@ -34,6 +34,10 @@ struct WebrtcMediaPage: View {
     @State private var serverTimeoutTask: DispatchWorkItem?
     @State private var clientTimeoutTask: DispatchWorkItem?
     
+    @State private var selectedDevice: AVCaptureDevice?
+    @State private var showDeviceSelection: Bool = false
+    @State private var showEmptyCameraAlert = false
+    
     @State private var pipController: AVPictureInPictureController!
     @State private var pipPossibleObservation: NSKeyValueObservation?
 
@@ -80,15 +84,6 @@ struct WebrtcMediaPage: View {
                             }
                     }
             }
-            .onAppear {
-                if self.videoServer == nil {
-                    self.videoServer = .init(layer: player, isPlaying: $isPlaying, endPoint: $endPoint)
-                }
-                
-                if self.videoClient == nil {
-                    self.videoClient = .init(session: $session)
-                }
-            }
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.35)) {
                     showServerPlayerControls.toggle()
@@ -100,12 +95,6 @@ struct WebrtcMediaPage: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
                     .opacity(isPlaying ? 0 : 1)
-            }
-            .overlay {
-                Text("Session from: \(endPoint)")
-                    .fontWeight(.light)
-                    .foregroundStyle(.white)
-                    .opacity(isPlaying && showServerPlayerControls ? 1 : 0)
             }
             .frame(width: videoPlayerSize.width, height: videoPlayerSize.height)
             .fullScreenCover(isPresented: $isPresent, content: {
@@ -193,14 +182,26 @@ struct WebrtcMediaPage: View {
                     ForEach(webrtcMedias) { webrtcMedia in
                         HStack {
                             Button("\(webrtcMedia.title)") {
-                                do {
-                                    try videoClient?.connect(to: webrtcMedia.mediaURL, with: 12005)
-                                    try videoClient?.startSendingVideoToServer()
-                                } catch {
-                                    print("error occured : \(error.localizedDescription)")
+                                if let device = selectedDevice {
+                                    do {
+                                        try videoClient?.connect(to: webrtcMedia.mediaURL, with: 12005, device: device)
+                                        try videoClient?.startSendingVideoToServer()
+                                    } catch {
+                                        print("error occured : \(error.localizedDescription)")
+                                    }
+                                } else {
+                                    // pop up an alert
+                                    showEmptyCameraAlert = true
                                 }
                             }
                             .foregroundStyle(.black)
+                            .alert(isPresented: $showEmptyCameraAlert) {
+                                Alert(
+                                    title: Text("Empty Camera"),
+                                    message: Text("Please select a device first."),
+                                    dismissButton: .default(Text("OK"))
+                                )
+                            }
                             
                             Spacer()
                             
@@ -228,6 +229,39 @@ struct WebrtcMediaPage: View {
                 .listRowBackground(Color.white)
             }
             .scrollContentBackground(.hidden)
+            
+            Button {
+                // Get device list and show popup
+                self.showDeviceSelection = true
+            } label: {
+                VStack {
+                    Text((self.selectedDevice != nil) ? "Reselect a camera" : "Select a camera")
+                        .fontWeight(.medium)
+                    if let selectedDeviceText = selectedDevice?.localizedName {
+                        Text("Selected device: \(selectedDeviceText)")
+                            .font(.system(size: 12))
+                    } else {
+                        Text("No device selected")
+                            .font(.system(size: 12))
+                    }
+                }
+            }
+            .padding(.vertical, 5)
+            .padding(.horizontal, 15)
+            .background(.tint)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+            .sheet(isPresented: $showDeviceSelection) {
+                NavigationStack {
+                    // Show camera device selection list in floating window
+                    DeviceSelectionDetail(devices: getAvailableVideoDevices()) { selectedDevice in
+                        self.selectedDevice = selectedDevice
+                        self.showDeviceSelection = false
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
+                }
+                .interactiveDismissDisabled()
+            }
                         
             Text("Presented by Research Center of 6G Mobile Communications, Huazhong University of Science and Technology, China.")
                 .multilineTextAlignment(.center)
@@ -248,6 +282,15 @@ struct WebrtcMediaPage: View {
             }
             .padding(.bottom, 10)
         }
+        .onAppear {
+            if self.videoServer == nil {
+                self.videoServer = .init(layer: player, isPlaying: $isPlaying, endPoint: $endPoint)
+            }
+            
+            if self.videoClient == nil {
+                self.videoClient = .init(session: $session)
+            }
+        }
         .ignoresSafeArea(edges: .top)
         .background(.myBackground)
     }
@@ -266,6 +309,24 @@ struct WebrtcMediaPage: View {
                 context.delete(webrtcMedias[index])
             }
         }
+    }
+    
+    // Get all available cameras
+    private func getAvailableVideoDevices() -> [AVCaptureDevice] {
+        let videoDevices = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [
+                .builtInWideAngleCamera,
+                .builtInTelephotoCamera,
+                .builtInUltraWideCamera,
+                .builtInDualCamera,
+                .builtInTripleCamera,
+                .builtInTrueDepthCamera
+            ],
+            mediaType: .video,
+            position: .unspecified
+        ).devices
+
+        return videoDevices
     }
     
     // Customized Playback Controls
@@ -291,6 +352,7 @@ struct WebrtcMediaPage: View {
                 .fontWeight(.light)
                 .foregroundStyle(.white)
                 .shadow(radius: 10)
+                .opacity(isPlaying ? 1 : 0)
         }
         .opacity(showServerPlayerControls ? 1 : 0)
         .animation(.easeInOut(duration: 0.25), value: showServerPlayerControls)

@@ -29,6 +29,7 @@ class VideoCaptureManager {
     // MARK: - dependencies
     
     @Binding var session: AVCaptureSession
+    var device: AVCaptureDevice
     private let videoOutput = AVCaptureVideoDataOutput()
     
     // MARK: - DispatchQueues to make the most of multithreading
@@ -40,8 +41,10 @@ class VideoCaptureManager {
     
     private var setupResult: SessionSetupResult = .success
     
-    init(session: Binding<AVCaptureSession>) {
+    init(session: Binding<AVCaptureSession>, device: AVCaptureDevice) {
         self._session = session
+        self.device = device
+        
         sessionQueue.async {
             self.requestCameraAuthorizationIfNeeded()
         }
@@ -88,7 +91,7 @@ class VideoCaptureManager {
         }
         
         do {
-            try addVideoDeviceInputToSession()
+            try addVideoDeviceInputToSession(device: device)
             try addVideoOutputToSession()
             
 //            ForEach(session.connections) { connection in
@@ -96,7 +99,6 @@ class VideoCaptureManager {
 //            }
             
 //            if let connection = session.connections.first {
-////                connection.videoOrientation = .portrait
 //                connection.videoRotationAngle = 90
 //            }
             session.connections[0].videoRotationAngle = 90
@@ -109,13 +111,18 @@ class VideoCaptureManager {
         session.commitConfiguration()
     }
     
-    private func addVideoDeviceInputToSession() throws {
+    private func addVideoDeviceInputToSession(device: AVCaptureDevice? = nil) throws {
         do {
             var defaultVideoDevice: AVCaptureDevice?
             
+            // use the select device if exist
+            if let selectedDevice = device {
+                print("The selected device is activated.")
+                defaultVideoDevice = selectedDevice
+            }
             // camera devices you can use vary depending on which iPhone you are
             // using so we want to
-            if let dualCameraDevice = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back) {
+            else if let dualCameraDevice = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back) {
                 defaultVideoDevice = dualCameraDevice
             } else if let dualWideCameraDevice = AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back) {
                 defaultVideoDevice = dualWideCameraDevice
