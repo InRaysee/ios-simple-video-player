@@ -170,10 +170,8 @@ struct LocalMediaPage: View {
                     ForEach(localMedias) { localMedia in
                         HStack {
                             Button("\(localMedia.title)") {
-                                if let bundle = Bundle.main.path(forResource: "\(localMedia.mediaName)", ofType: "\(localMedia.mediaType)") {
-                                    let newPlayerItem: AVPlayerItem = .init(url: URL(fileURLWithPath: bundle))
-                                    player?.replaceCurrentItem(with: newPlayerItem)
-                                }
+                                let newPlayerItem: AVPlayerItem = .init(url: URL(string: "\(localMedia.mediaURL)")!)
+                                player?.replaceCurrentItem(with: newPlayerItem)
                                 
                                 progress = 0
                                 lastDraggedProgress = 0
@@ -190,7 +188,7 @@ struct LocalMediaPage: View {
                             
                             Spacer()
                             
-                            Text("\(localMedia.mediaName).\(localMedia.mediaType)")
+                            Text("\(localMedia.mediaURL)")
                                 .foregroundStyle(.gray)
                                 .font(.callout)
                                 .lineLimit(1)
@@ -240,7 +238,7 @@ struct LocalMediaPage: View {
     
     private func addMedia() {
         withAnimation {
-            let newItem = LocalMedia(title: "", mediaName: "", mediaType: "")
+            let newItem = LocalMedia(title: "", mediaURL: "")
             context.insert(newItem)
             newLocalMedia = newItem
         }

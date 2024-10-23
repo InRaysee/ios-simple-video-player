@@ -15,6 +15,9 @@ struct LocalMediaDetail: View {
     
     @Query(sort: \LocalMedia.title) private var localMedias: [LocalMedia]
     
+    @State private var showPicker = false
+    @State private var selectedVideoURL: URL? = nil
+    
     init(localMedia: LocalMedia) {
         self.localMedia = localMedia
     }
@@ -36,28 +39,34 @@ struct LocalMediaDetail: View {
             }
             .listRowBackground(Color.white)
 
-            HStack(spacing: 4.0) {
-                Text("File: ")
-                    .fontWeight(.semibold)
-                
-                Spacer()
-                
-                TextField("name", text: $localMedia.mediaName)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .frame(width: 150)
-                    .padding(5)
-                    .border(.gray)
-                
-                Text(".")
-                    .frame(width: 5)
-                
-                TextField("type", text: $localMedia.mediaType)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .frame(width: 60)
-                    .padding(5)
-                    .border(.gray)
+            VStack {
+                HStack {
+                    Text("URL: ")
+                        .fontWeight(.semibold)
+                    
+                    Spacer()
+                    
+                    VStack {
+                        Text("\(localMedia.mediaURL)")
+                        
+                        Button("Select video") {
+                            showPicker.toggle()
+                        }
+                        .fontWeight(.medium)
+                        .frame(width: 233)
+                        .padding(5)
+                        .background(.tint)
+                        .foregroundStyle(.white)
+                        .cornerRadius(8)
+                    }
+                    .sheet(isPresented: $showPicker) {
+                        DocumentPickerView { urls in
+                            if let firstURL = urls.first {
+                                localMedia.mediaURL = firstURL.absoluteString
+                            }
+                        }
+                    }
+                }
             }
             .listRowBackground(Color.white)
         }
@@ -70,7 +79,7 @@ struct LocalMediaDetail: View {
                 Button("Done") {
                     dismiss()
                 }
-                .disabled(localMedia.title.isEmpty || localMedia.mediaName.isEmpty || localMedia.mediaType.isEmpty)
+                .disabled(localMedia.title.isEmpty || localMedia.mediaURL.isEmpty)
             }
             
             ToolbarItem(placement: .cancellationAction) {

@@ -37,6 +37,7 @@
 		6973D0E52C364FE500F48E7C /* icon.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6973D0E42C364FE500F48E7C /* icon.jpg */; };
 		6985F36A2C37BF350018A7FF /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F3692C37BF350018A7FF /* CameraPreview.swift */; };
 		9E2776032CC79E7900312E14 /* DeviceSelectionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */; };
+		9E6B30292CC7D95000DB5226 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +72,8 @@
 		6973D0E42C364FE500F48E7C /* icon.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = icon.jpg; sourceTree = "<group>"; };
 		6985F3692C37BF350018A7FF /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
 		9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSelectionDetail.swift; sourceTree = "<group>"; };
+		9E6972A92CC7F63300E32C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +138,7 @@
 		6973D0872C35317D00F48E7C /* StreamPlayer */ = {
 			isa = PBXGroup;
 			children = (
+				9E6972A92CC7F63300E32C75 /* Info.plist */,
 				691E56D02C36A44C0077B853 /* StreamServer.swift */,
 				691E56CB2C369BAC0077B853 /* StreamClient.swift */,
 				691E56C82C369B660077B853 /* Extensions */,
@@ -150,6 +154,7 @@
 				9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */,
 				6973D0AF2C35CAAD00F48E7C /* LocalMediaPage.swift */,
 				6973D0A72C35828E00F48E7C /* LocalMediaDetail.swift */,
+				9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */,
 				6973D0AD2C35947C00F48E7C /* NetworkSourceDetail.swift */,
 				691E56BE2C3698C30077B853 /* WebrtcMediaDetail.swift */,
 				6973D0A32C3577F900F48E7C /* SampleData.swift */,
@@ -245,6 +250,7 @@
 				691E56DB2C36B4A20077B853 /* WebrtcPlayer.swift in Sources */,
 				691E56D62C36A4880077B853 /* NALUParser.swift in Sources */,
 				691E56C32C369B1C0077B853 /* TCPClient.swift in Sources */,
+				9E6B30292CC7D95000DB5226 /* DocumentPickerView.swift in Sources */,
 				691E56D12C36A44D0077B853 /* StreamServer.swift in Sources */,
 				691E56BB2C3697A90077B853 /* WebrtcMediaPage.swift in Sources */,
 				6973D0A62C35784800F48E7C /* NetworkSource.swift in Sources */,
@@ -403,7 +409,11 @@
 				DEVELOPMENT_TEAM = 9AX3W44P9S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StreamPlayer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used to scan barcodes";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Used to play videos";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -435,7 +445,11 @@
 				DEVELOPMENT_TEAM = 9AX3W44P9S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StreamPlayer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used to scan barcodes";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Used to play videos";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

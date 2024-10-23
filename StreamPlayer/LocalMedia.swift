@@ -11,17 +11,15 @@ import SwiftData
 @Model
 class LocalMedia {
     var title: String
-    var mediaName: String
-    var mediaType: String
+    var mediaURL: String
     
-    init(title: String, mediaName: String, mediaType: String) {
+    init(title: String, mediaURL: String) {
         self.title = title
-        self.mediaName = mediaName
-        self.mediaType = mediaType
+        self.mediaURL = mediaURL
     }
     
     static let sampleData = [
-        LocalMedia(title: "Apple", mediaName: "apple", mediaType: "mp4"),
-        LocalMedia(title: "Tokyo", mediaName: "tokyo", mediaType: "mp4")
+        LocalMedia(title: "Apple", mediaURL: "/Users/fengfangzheng/sites/ios-simple-video-player/apple.mp4"),
+        LocalMedia(title: "Tokyo", mediaURL: "/Users/fengfangzheng/sites/ios-simple-video-player/tokyo.mp4")
     ]
 }
