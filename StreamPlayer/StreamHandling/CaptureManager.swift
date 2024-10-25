@@ -7,13 +7,15 @@
 
 import AVFoundation
 import SwiftUI
+import VideoToolbox
+import AudioToolbox
 
 /// Absract: An facade Object configuring AVCaptureSession and managing it.
 ///
 /// Its primary rules are to configure AVCaptureSession and
 /// set delegate which should handle raw video output data
-class StreamCaptureManager {
-        
+class CaptureManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
+    
     private enum SessionSetupResult {
         case success
         case notAuthorized
@@ -28,9 +30,16 @@ class StreamCaptureManager {
     
     // MARK: - dependencies
     
+    var onVideoData: ((Data) -> Void)?
+    var onAudioData: ((Data) -> Void)?
+    
     @Binding var session: AVCaptureSession
-    var videoDevice: AVCaptureDevice
-    var audioDevice: AVCaptureDevice?
+    @Binding var tcpClient: TCPClient
+    private var videoCompressionSession: VTCompressionSession?
+    private var audioConverter: AudioConverterRef?
+    
+    private var videoDevice: AVCaptureDevice
+    private var audioDevice: AVCaptureDevice
     private let videoOutput = AVCaptureVideoDataOutput()
     private let audioOutput = AVCaptureAudioDataOutput()
     
@@ -41,35 +50,28 @@ class StreamCaptureManager {
     private let audioOutputQueue = DispatchQueue(label: "audio.output.queue")
     
     // MARK: - init
-    
+        
     private var setupResult: SessionSetupResult = .success
     
-    init(session: Binding<AVCaptureSession>, videoDevice: AVCaptureDevice, audioDevice: AVCaptureDevice? = nil) {
+    init(session: Binding<AVCaptureSession>, tcpClient: Binding<TCPClient>, videoDevice: AVCaptureDevice, audioDevice: AVCaptureDevice? = nil) {
+        
+        super.init()
+        
         self._session = session
+        self._tcpClient = tcpClient
         self.videoDevice = videoDevice
-        if (audioDevice != nil) {
-            self.audioDevice = audioDevice
-        }
+        self.audioDevice = audioDevice!
         
-        sessionQueue.async {
-            self.requestCameraAuthorizationIfNeeded()
-            if (audioDevice != nil) {
-                self.requestMicrophoneAuthorizationIfNeeded()
-            }
-        }
-    
-        sessionQueue.async {
-            self.configureSession()
-        }
+        setupCaptureSession()
+        setupH264Encoder()
+        setupAACEncoder()
         
-        sessionQueue.async {
-            self.startSessionIfPossible()
-        }
     }
     
     // MARK: - helper methods
-    
+
     private func requestCameraAuthorizationIfNeeded() {
+        
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             break
@@ -86,9 +88,11 @@ class StreamCaptureManager {
         default:
             setupResult = .notAuthorized
         }
+        
     }
     
     private func requestMicrophoneAuthorizationIfNeeded() {
+        
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
         case .authorized:
             break
@@ -105,17 +109,19 @@ class StreamCaptureManager {
         default :
             setupResult = .notAuthorized
         }
+        
     }
     
-    private func configureSession() {
+    func setupCaptureSession() {
+        
         if setupResult != .success {
             return
         }
         
         session.beginConfiguration()
         
-        if session.canSetSessionPreset(.iFrame1280x720) {
-            session.sessionPreset = .iFrame1280x720
+        if session.canSetSessionPreset(.high) {
+            session.sessionPreset = .high
         }
         
         do {
@@ -134,19 +140,20 @@ class StreamCaptureManager {
             session.connections[1].videoRotationAngle = 90
             
             // Audio
-            if let audioDevice = self.audioDevice {
-                try addAudioDeviceInputToSession(device: audioDevice)
-                try addAudioOutputToSession()
-            }
+            try addAudioDeviceInputToSession(device: audioDevice)
+            try addAudioOutputToSession()
         } catch {
             print("error ocurred : \(error.localizedDescription)")
             return
         }
         
         session.commitConfiguration()
+        startSessionIfPossible()
+        
     }
     
     private func addVideoDeviceInputToSession(device: AVCaptureDevice? = nil) throws {
+        
         do {
             var defaultVideoDevice: AVCaptureDevice?
             
@@ -191,9 +198,11 @@ class StreamCaptureManager {
             
             throw error
         }
+        
     }
     
     private func addAudioDeviceInputToSession(device: AVCaptureDevice? = nil) throws {
+        
         do {
             var defaultAudioDevice: AVCaptureDevice?
             
@@ -227,9 +236,13 @@ class StreamCaptureManager {
             
             throw error
         }
+        
     }
 
     private func addVideoOutputToSession() throws {
+        
+        videoOutput.setSampleBufferDelegate(self, queue: videoOutputQueue)
+        
         if session.canAddOutput(videoOutput) {
             session.addOutput(videoOutput)
         } else {
@@ -238,9 +251,13 @@ class StreamCaptureManager {
             
             throw ConfigurationError.cannotAddOutput
         }
+        
     }
     
     private func addAudioOutputToSession() throws {
+        
+        audioOutput.setSampleBufferDelegate(self, queue: audioOutputQueue)
+        
         if session.canAddOutput(audioOutput) {
             session.addOutput(audioOutput)
         } else {
@@ -264,14 +281,124 @@ class StreamCaptureManager {
     
     // MARK: - Delegate handling video and audio output data
     
-    // VideoOutputDelegate recieves sequence of raw CMSampleBuffers
-    func setVideoOutputDelegate(with delegate: AVCaptureVideoDataOutputSampleBufferDelegate) {
-        videoOutput.setSampleBufferDelegate(delegate, queue: videoOutputQueue)
+    func setupH264Encoder() {
+        // 初始化 H.264 编码器
+        let err = VTCompressionSessionCreate(allocator: kCFAllocatorDefault,
+                                             width: Int32(options.destWidth),
+                                             height: Int32(options.destHeight),
+                                             codecType: options.codec,
+                                             encoderSpecification: videoEncoderSpecification,
+                                             imageBufferAttributes: sourceImageBufferAttributes,
+                                             compressedDataAllocator: nil,
+                                             outputCallback: nil,
+                                             refcon: nil,
+                                             compressionSessionOut: &compressionSessionOut)
+        guard err == noErr, let compressionSession = compressionSessionOut else {
+            throw RuntimeError("VTCompressionSession creation failed (\(err))!")
+        }
+        
+        
+        VTCompressionSessionCreate(allocator: nil, width: 640, height: 480, codecType: kCMVideoCodecType_H264, encoderSpecification: nil, imageBufferAttributes: nil, compressedDataAllocator: nil, outputCallback: { _, _, status, flags, sampleBuffer in
+            guard status == noErr else { return }
+            
+            if let sampleBuffer = sampleBuffer, let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                var length = 0
+                var dataPointer: UnsafeMutablePointer<Int8>?
+                CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: &length, totalLengthOut: &length, dataPointerOut: &dataPointer)
+                
+                if let dataPointer = dataPointer {
+                    let data = Data(bytes: dataPointer, count: length)
+                    // 通过 TCP 发送 H.264 视频数据
+                    self.tcpClient.send(data: data)
+                }
+            }
+        }, refcon: nil, compressionSessionOut: &videoCompressionSession)
+        
+        VTSessionSetProperty(videoCompressionSession!, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanTrue)
+        VTSessionSetProperty(videoCompressionSession!, key: kVTCompressionPropertyKey_ProfileLevel, value: kVTProfileLevel_H264_Baseline_AutoLevel)
     }
     
-    // AudioOutputDelegate
-    func setAudioOutputDelegate(with delegate: AVCaptureAudioDataOutputSampleBufferDelegate) {
-        audioOutput.setSampleBufferDelegate(delegate, queue: audioOutputQueue)
+    func setupAACEncoder() {
+        var inputFormat = AudioStreamBasicDescription()
+        inputFormat.mSampleRate = 44100
+        inputFormat.mFormatID = kAudioFormatLinearPCM
+        inputFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked
+        inputFormat.mBytesPerPacket = 2
+        inputFormat.mFramesPerPacket = 1
+        inputFormat.mBytesPerFrame = 2
+        inputFormat.mChannelsPerFrame = 1
+        inputFormat.mBitsPerChannel = 16
+        inputFormat.mReserved = 0
+        
+        var outputFormat = AudioStreamBasicDescription()
+        outputFormat.mSampleRate = 44100
+        outputFormat.mFormatID = kAudioFormatMPEG4AAC
+        outputFormat.mChannelsPerFrame = 1
+        
+        var bitrate: UInt32 = 64000
+        AudioConverterNew(&inputFormat, &outputFormat, &audioConverter)
+        AudioConverterSetProperty(audioConverter!, kAudioConverterEncodeBitRate, UInt32(MemoryLayout.size(ofValue: bitrate)), &bitrate)
     }
+    
+    func encodeAudio(sampleBuffer: CMSampleBuffer) {
+        guard let audioConverter = audioConverter else { return }
+        
+        var blockBuffer: CMBlockBuffer?
+        var audioBufferList = AudioBufferList()
+        
+        CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, bufferListSizeNeededOut: nil,
+            bufferListOut: &audioBufferList,
+            bufferListSize: MemoryLayout<AudioBufferList>.size,
+            blockBufferAllocator: nil,
+            blockBufferMemoryAllocator: nil,
+            flags: 0,
+            blockBufferOut: &blockBuffer
+            
+        )
+        
+        var encodedData = Data()
+        let outputData = UnsafeMutablePointer<UInt8>.allocate(capacity: 1024)
+        var outputSize: UInt32 = 1024
+        var outputBufferList = AudioBufferList(
+            mNumberBuffers: 1,
+            mBuffers: AudioBuffer(mNumberChannels: 1, mDataByteSize: 1024, mData: outputData)
+        )
+        
+        let status = AudioConverterFillComplexBuffer(
+            audioConverter,
+            { inAudioConverter, ioNumberDataPackets, ioData, outPacketDescription, inUserData in
+                ioData.pointee.mBuffers.mData = audioBufferList.mBuffers.mData
+                ioData.pointee.mBuffers.mDataByteSize = audioBufferList.mBuffers.mDataByteSize
+                ioNumberDataPackets.pointee = 1
+                return noErr
+            },
+            &audioBufferList,
+            &outputSize,
+            &outputBufferList,
+            nil
+        )
+        
+        if status == noErr {
+            encodedData.append(outputData, count: Int(outputSize))
+            // 通过 TCP 发送 AAC 音频数据
+            self.tcpClient.send(data: encodedData)
+        }
+        
+        outputData.deallocate()
+    }
+    
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        if connection.audioChannels.isEmpty {
+            // 处理视频帧 (H.264 编码)
+            if let compressionSession = videoCompressionSession, let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                let timeStamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+                VTCompressionSessionEncodeFrame(compressionSession, imageBuffer: imageBuffer, presentationTimeStamp: timeStamp, duration: .invalid, frameProperties: nil, sourceFrameRefcon: nil, infoFlagsOut: nil)
+            }
+        } else {
+            // 处理音频帧 (AAC 编码)
+            encodeAudio(sampleBuffer: sampleBuffer)
+        }
+    }
+    
 }
 

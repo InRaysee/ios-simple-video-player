@@ -11,8 +11,10 @@ import AVFoundation
 struct DeviceSelectionDetail: View {
     @Environment(\.dismiss) private var dismiss
     
-    let devices: [AVCaptureDevice]
-    var onSelect: (AVCaptureDevice) -> Void
+    let videoDevices: [AVCaptureDevice]
+    let audioDevices: [AVCaptureDevice]
+    var onVideoSelect: (AVCaptureDevice) -> Void
+    var onAudioSelect: (AVCaptureDevice) -> Void
 
     var body: some View {
         ZStack {
@@ -21,27 +23,58 @@ struct DeviceSelectionDetail: View {
                 .ignoresSafeArea()
             
             VStack {
-                if devices.isEmpty {
-                    // Gray alert message when the device list is empty
-                    Text("No camera available")
-                        .foregroundColor(.gray)  // Set the text color to gray
-                        .padding()
-                } else {
-                    // If the device list is not empty, show camera devices
-                    List(devices, id: \.self) { device in
-                        Button(action: {
-                            // After the user selects the device, call onSelect
-                            onSelect(device)
-                        }) {
-                            Text(device.localizedName)  // Display device name
+                Form {
+                    Section("Select a video device:") {
+                        if videoDevices.isEmpty {
+                            // Gray alert message when the device list is empty
+                            Text("No video device available")
+                                .foregroundColor(.gray)  // Set the text color to gray
+                                .padding()
+                        } else {
+                            // If the device list is not empty, show video devices
+                            ForEach(videoDevices, id: \.self) { device in
+                                Button(action: {
+                                    // After the user selects the device, call onSelect
+                                    onVideoSelect(device)
+                                }) {
+                                    Text(device.localizedName)  // Display device name
+                                }
+                                .listRowBackground(Color.white)
+                            }
                         }
-                        .listRowBackground(Color.white)
                     }
-                    .scrollContentBackground(.hidden)
+                    .foregroundStyle(.gray)
+                    .listRowBackground(Color.white)
                 }
+                .scrollContentBackground(.hidden)
+                
+                Form {
+                    Section("Select a audio device:") {
+                        if audioDevices.isEmpty {
+                            // Gray alert message when the device list is empty
+                            Text("No audio device available")
+                                .foregroundColor(.gray)  // Set the text color to gray
+                                .padding()
+                        } else {
+                            // If the device list is not empty, show audio devices
+                            ForEach(audioDevices, id: \.self) { device in
+                                Button(action: {
+                                    // After the user selects the device, call onSelect
+                                    onAudioSelect(device)
+                                }) {
+                                    Text(device.localizedName)  // Display device name
+                                }
+                                .listRowBackground(Color.white)
+                            }
+                        }
+                    }
+                    .foregroundStyle(.gray)
+                    .listRowBackground(Color.white)
+                }
+                .scrollContentBackground(.hidden)
             }
         }
-        .navigationTitle("Select a camera")
+        .navigationTitle("Select devices")
         .foregroundStyle(.black)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -69,9 +102,16 @@ struct DeviceSelectionDetail: View {
         mediaType: .video,
         position: .unspecified
     ).devices
+    let audioDevices = AVCaptureDevice.DiscoverySession(
+        deviceTypes: [
+            .microphone
+        ],
+        mediaType: .audio,
+        position: .unspecified
+    ).devices
     
     NavigationStack {
-        DeviceSelectionDetail(devices: videoDevices, onSelect: { _ in })
+        DeviceSelectionDetail(videoDevices: videoDevices, audioDevices: audioDevices, onVideoSelect: { _ in }, onAudioSelect: { _ in })
             .navigationBarTitleDisplayMode(.inline)
     }
 }

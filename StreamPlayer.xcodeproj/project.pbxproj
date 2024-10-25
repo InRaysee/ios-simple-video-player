@@ -37,6 +37,7 @@
 		6973D0E52C364FE500F48E7C /* icon.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6973D0E42C364FE500F48E7C /* icon.jpg */; };
 		6985F36A2C37BF350018A7FF /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F3692C37BF350018A7FF /* CameraPreview.swift */; };
 		9E2776032CC79E7900312E14 /* DeviceSelectionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */; };
+		9E6972E42CC8ABF800E32C75 /* ACCEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6972E32CC8ABF800E32C75 /* ACCEncoder.swift */; };
 		9E6B30292CC7D95000DB5226 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */; };
 /* End PBXBuildFile section */
 
@@ -73,6 +74,7 @@
 		6985F3692C37BF350018A7FF /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
 		9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSelectionDetail.swift; sourceTree = "<group>"; };
 		9E6972A92CC7F63300E32C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		9E6972E32CC8ABF800E32C75 /* ACCEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACCEncoder.swift; sourceTree = "<group>"; };
 		9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -103,6 +105,7 @@
 				691E56D52C36A4880077B853 /* H264Converter.swift */,
 				691E56D42C36A4880077B853 /* NALUParser.swift */,
 				691E56C52C369B3B0077B853 /* H264Encoder.swift */,
+				9E6972E32CC8ABF800E32C75 /* ACCEncoder.swift */,
 				691E56C42C369B3A0077B853 /* StreamCaptureManager.swift */,
 				6985F3692C37BF350018A7FF /* CameraPreview.swift */,
 			);
@@ -252,6 +255,7 @@
 				691E56C32C369B1C0077B853 /* TCPClient.swift in Sources */,
 				9E6B30292CC7D95000DB5226 /* DocumentPickerView.swift in Sources */,
 				691E56D12C36A44D0077B853 /* StreamServer.swift in Sources */,
+				9E6972E42CC8ABF800E32C75 /* ACCEncoder.swift in Sources */,
 				691E56BB2C3697A90077B853 /* WebrtcMediaPage.swift in Sources */,
 				6973D0A62C35784800F48E7C /* NetworkSource.swift in Sources */,
 				691E56CC2C369BAC0077B853 /* StreamClient.swift in Sources */,
@@ -414,6 +418,7 @@
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Used to play videos";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -428,9 +433,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = name.inraysee.StreamPlayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 1.3;
 			};
 			name = Debug;
 		};
@@ -450,6 +459,7 @@
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Used to play videos";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to scan barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -464,9 +474,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = name.inraysee.StreamPlayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 1.3;
 			};
 			name = Release;
 		};

@@ -17,6 +17,7 @@ class StreamClient {
     
     private var captureManager: StreamCaptureManager?
     private var videoEncoder: H264Encoder?
+    private var audioEncoder: AACEncoder?
     private var tcpClient: TCPClient?
     
     @Binding var session: AVCaptureSession
@@ -25,8 +26,13 @@ class StreamClient {
         self._session = session
     }
     
-    func connect(to ipAddress: String, with port: UInt16, device: AVCaptureDevice) throws {
-        captureManager = StreamCaptureManager(session: $session, device: device)
+    func connect(to ipAddress: String, with port: UInt16, videoDevice: AVCaptureDevice, audioDevice: AVCaptureDevice? = nil) throws {
+        if let audioDevice {
+            captureManager = StreamCaptureManager(session: $session, videoDevice: videoDevice, audioDevice: audioDevice)
+            audioEncoder = AACEncoder()
+        } else {
+            captureManager = StreamCaptureManager(session: $session, videoDevice: videoDevice)
+        }
         videoEncoder = H264Encoder()
         tcpClient = TCPClient()
         
@@ -35,8 +41,10 @@ class StreamClient {
     
     func startSendingStreamToServer() throws {
         try videoEncoder?.configureCompressSession()
+//        try audioEncoder?.configure(inputFormat: captureManager?.audioDevice?.activeFormat)
         
         captureManager?.setVideoOutputDelegate(with: videoEncoder!)
+//        captureManager?.setAudioOutputDelegate(with: audioEncoder!)
         
         // if connection is not established, 'send(:)' method in TCPClient doesn't
         // have any effect so it's okay to send data before establishing connection

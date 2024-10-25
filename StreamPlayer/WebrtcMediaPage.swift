@@ -34,7 +34,8 @@ struct WebrtcMediaPage: View {
     @State private var serverTimeoutTask: DispatchWorkItem?
     @State private var clientTimeoutTask: DispatchWorkItem?
     
-    @State private var selectedDevice: AVCaptureDevice?
+    @State private var selectedVideoDevice: AVCaptureDevice?
+    @State private var selectedAudioDevice: AVCaptureDevice?
     @State private var showDeviceSelection: Bool = false
     @State private var showEmptyCameraAlert = false
     
@@ -182,9 +183,15 @@ struct WebrtcMediaPage: View {
                     ForEach(webrtcMedias) { webrtcMedia in
                         HStack {
                             Button("\(webrtcMedia.title)") {
-                                if let device = selectedDevice {
+                                if let videoDevice = selectedVideoDevice {
                                     do {
-                                        try streamClient?.connect(to: webrtcMedia.mediaURL, with: 12005, device: device)
+//                                        if let audioDevice = selectedAudioDevice {
+//                                            try streamClient?.connect(to: webrtcMedia.mediaURL, with: 12005, videoDevice: videoDevice, audioDevice: audioDevice)
+//                                        } else {
+//                                            try streamClient?.connect(to: webrtcMedia.mediaURL, with: 12005, videoDevice: videoDevice)
+//                                        }
+                                        try streamClient?.connect(to: webrtcMedia.mediaURL, with: 12005, videoDevice: videoDevice)
+
                                         try streamClient?.startSendingStreamToServer()
                                     } catch {
                                         print("error occured : \(error.localizedDescription)")
@@ -197,8 +204,8 @@ struct WebrtcMediaPage: View {
                             .foregroundStyle(.black)
                             .alert(isPresented: $showEmptyCameraAlert) {
                                 Alert(
-                                    title: Text("Empty Camera"),
-                                    message: Text("Please select a device first."),
+                                    title: Text("No video device"),
+                                    message: Text("Please select at least one video device first."),
                                     dismissButton: .default(Text("OK"))
                                 )
                             }
@@ -235,13 +242,13 @@ struct WebrtcMediaPage: View {
                 self.showDeviceSelection = true
             } label: {
                 VStack {
-                    Text((self.selectedDevice != nil) ? "Reselect a camera" : "Select a camera")
+                    Text((self.selectedVideoDevice != nil) ? "Reselect devices" : "Select devices")
                         .fontWeight(.medium)
-                    if let selectedDeviceText = selectedDevice?.localizedName {
-                        Text("Selected device: \(selectedDeviceText)")
+                    
+                    HStack {
+                        Text("Video: \(selectedVideoDevice?.localizedName ?? "")")
                             .font(.system(size: 12))
-                    } else {
-                        Text("No device selected")
+                        Text("Audio: \(selectedAudioDevice?.localizedName ?? "")")
                             .font(.system(size: 12))
                     }
                 }
@@ -254,10 +261,17 @@ struct WebrtcMediaPage: View {
             .sheet(isPresented: $showDeviceSelection) {
                 NavigationStack {
                     // Show camera device selection list in floating window
-                    DeviceSelectionDetail(devices: getAvailableVideoDevices()) { selectedDevice in
-                        self.selectedDevice = selectedDevice
-                        self.showDeviceSelection = false
-                    }
+                    DeviceSelectionDetail(videoDevices: getAvailableVideoDevices(), audioDevices: getAvailableAudioDevices(), onVideoSelect: { selectedVideoDevice in
+                        self.selectedVideoDevice = selectedVideoDevice
+                        if let selectedAudioDevice {
+                            self.showDeviceSelection = false
+                        }
+                    }, onAudioSelect: { selectedAudioDevice in
+                        self.selectedAudioDevice = selectedAudioDevice
+                        if let selectedVideoDevice {
+                            self.showDeviceSelection = false
+                        }
+                    })
                     .navigationBarTitleDisplayMode(.inline)
                 }
                 .interactiveDismissDisabled()
@@ -311,7 +325,7 @@ struct WebrtcMediaPage: View {
         }
     }
     
-    // Get all available cameras
+    // Get all available video devices
     private func getAvailableVideoDevices() -> [AVCaptureDevice] {
         let videoDevices = AVCaptureDevice.DiscoverySession(
             deviceTypes: [
@@ -325,8 +339,19 @@ struct WebrtcMediaPage: View {
             mediaType: .video,
             position: .unspecified
         ).devices
-
         return videoDevices
+    }
+    
+    // Get all available audio devices
+    private func getAvailableAudioDevices() -> [AVCaptureDevice] {
+        let audioDevices = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [
+                .microphone
+            ],
+            mediaType: .audio,
+            position: .unspecified
+        ).devices
+        return audioDevices
     }
     
     // Customized Playback Controls
