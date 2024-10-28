@@ -26,11 +26,14 @@ struct WebrtcMediaPage: View {
     @State private var endPoint: String = ""
 
     @State private var player: AVSampleBufferDisplayLayer = .init()
-    @State private var preview: AVCaptureVideoPreviewLayer = .init()
     @State private var streamClient: StreamClient?
     @State private var streamServer: StreamServer?
     @State private var session: AVCaptureSession = .init()
 
+    #if !os(visionOS)
+    @State private var preview: AVCaptureVideoPreviewLayer = .init()
+    #endif
+    
     @State private var serverTimeoutTask: DispatchWorkItem?
     @State private var clientTimeoutTask: DispatchWorkItem?
     
@@ -146,6 +149,11 @@ struct WebrtcMediaPage: View {
                 Rectangle()
                     .fill(.black)
                 
+                #if os(visionOS)
+                Text("Preview not supported in visionOS.")
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                #else
                 CameraPreview(session: session, layer: $preview)
                     .overlay {
                         Rectangle()
@@ -168,6 +176,7 @@ struct WebrtcMediaPage: View {
                                     .opacity(showClientPlayerControls ? 1 : 0)
                             }
                     }
+                #endif
             }
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.35)) {
@@ -313,19 +322,46 @@ struct WebrtcMediaPage: View {
     
     // Get all available cameras
     private func getAvailableVideoDevices() -> [AVCaptureDevice] {
+        #if os(iOS) || targetEnvironment(macCatalyst) || os(tvOS)
         let videoDevices = AVCaptureDevice.DiscoverySession(
             deviceTypes: [
                 .builtInWideAngleCamera,
-                .builtInTelephotoCamera,
                 .builtInUltraWideCamera,
+                .builtInTelephotoCamera,
                 .builtInDualCamera,
+                .builtInDualWideCamera,
                 .builtInTripleCamera,
-                .builtInTrueDepthCamera
+                .continuityCamera,
+                .builtInLiDARDepthCamera,
+                .builtInWideAngleCamera
             ],
             mediaType: .video,
             position: .unspecified
         ).devices
-
+        #endif
+        
+        #if os(macOS)
+        let videoDevices = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [
+                .builtInWideAngleCamera,
+                .continuityCamera,
+                .deskViewCamera
+            ],
+            mediaType: .video,
+            position: .unspecified
+        ).devices
+        #endif
+        
+        #if os(visionOS)
+        let videoDevices = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [
+                .builtInWideAngleCamera
+            ],
+            mediaType: .video,
+            position: .unspecified
+        ).devices
+        #endif
+        
         return videoDevices
     }
     

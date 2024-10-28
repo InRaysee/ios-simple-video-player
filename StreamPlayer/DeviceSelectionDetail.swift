@@ -60,11 +60,11 @@ struct DeviceSelectionDetail: View {
     let videoDevices = AVCaptureDevice.DiscoverySession(
         deviceTypes: [
             .builtInWideAngleCamera,
-            .builtInTelephotoCamera,
-            .builtInUltraWideCamera,
-            .builtInDualCamera,
-            .builtInTripleCamera,
-            .builtInTrueDepthCamera
+//            .builtInTelephotoCamera,
+//            .builtInUltraWideCamera,
+//            .builtInDualCamera,
+//            .builtInTripleCamera,
+//            .builtInTrueDepthCamera
         ],
         mediaType: .video,
         position: .unspecified
