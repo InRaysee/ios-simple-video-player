@@ -1,4 +1,4 @@
 .DS_Store
 *.mp4
-StreamPlayer.xcodeproj/project.xcworkspace/xcuserdata/*
+StreamPlayer.xcodeproj/project.xcworkspace/xcuserdata
 build
