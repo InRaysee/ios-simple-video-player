@@ -102,6 +102,7 @@ struct DeviceSelectionDetail: View {
         mediaType: .video,
         position: .unspecified
     ).devices
+#if !os(visionOS)
     let audioDevices = AVCaptureDevice.DiscoverySession(
         deviceTypes: [
             .microphone
@@ -109,7 +110,9 @@ struct DeviceSelectionDetail: View {
         mediaType: .audio,
         position: .unspecified
     ).devices
-    
+#else
+    let audioDevices = [] as [AVCaptureDevice]
+#endif
     NavigationStack {
         DeviceSelectionDetail(videoDevices: videoDevices, audioDevices: audioDevices, onVideoSelect: { _ in }, onAudioSelect: { _ in })
             .navigationBarTitleDisplayMode(.inline)

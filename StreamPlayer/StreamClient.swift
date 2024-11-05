@@ -17,7 +17,9 @@ class StreamClient {
     
     private var captureManager: StreamCaptureManager?
     private var videoEncoder: H264Encoder?
+#if !os(visionOS)
     private var audioEncoder: AACEncoder?
+#endif
     private var tcpClient: TCPClient?
     
     @Binding var session: AVCaptureSession
@@ -28,8 +30,10 @@ class StreamClient {
     
     func connect(to ipAddress: String, with port: UInt16, videoDevice: AVCaptureDevice, audioDevice: AVCaptureDevice? = nil) throws {
         if let audioDevice {
+#if !os(visionOS)
             captureManager = StreamCaptureManager(session: $session, videoDevice: videoDevice, audioDevice: audioDevice)
             audioEncoder = AACEncoder()
+#endif
         } else {
             captureManager = StreamCaptureManager(session: $session, videoDevice: videoDevice)
         }

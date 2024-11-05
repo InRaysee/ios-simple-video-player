@@ -381,6 +381,7 @@ struct WebrtcMediaPage: View {
     
     // Get all available audio devices
     private func getAvailableAudioDevices() -> [AVCaptureDevice] {
+#if !os(visionOS)
         let audioDevices = AVCaptureDevice.DiscoverySession(
             deviceTypes: [
                 .microphone
@@ -389,7 +390,11 @@ struct WebrtcMediaPage: View {
             position: .unspecified
         ).devices
         return audioDevices
+#else
+        return [] as [AVCaptureDevice]
+#endif
     }
+
     
     // Customized Playback Controls
     @ViewBuilder

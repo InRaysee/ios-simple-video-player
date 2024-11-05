@@ -30,10 +30,11 @@ class StreamCaptureManager {
     
     @Binding var session: AVCaptureSession
     var videoDevice: AVCaptureDevice
-    var audioDevice: AVCaptureDevice?
     private let videoOutput = AVCaptureVideoDataOutput()
+#if !os(visionOS)
+    var audioDevice: AVCaptureDevice?
     private let audioOutput = AVCaptureAudioDataOutput()
-    
+#endif
     // MARK: - DispatchQueues to make the most of multithreading
     
     private let sessionQueue = DispatchQueue(label: "session.queue")
@@ -47,9 +48,11 @@ class StreamCaptureManager {
     init(session: Binding<AVCaptureSession>, videoDevice: AVCaptureDevice, audioDevice: AVCaptureDevice? = nil) {
         self._session = session
         self.videoDevice = videoDevice
+#if !os(visionOS)
         if (audioDevice != nil) {
             self.audioDevice = audioDevice
         }
+#endif
         
         sessionQueue.async {
             self.requestCameraAuthorizationIfNeeded()
@@ -274,6 +277,7 @@ class StreamCaptureManager {
         }
     }
     
+#if !os(visionOS)
     private func addAudioOutputToSession() throws {
         if session.canAddOutput(audioOutput) {
             session.addOutput(audioOutput)
@@ -284,6 +288,7 @@ class StreamCaptureManager {
             throw ConfigurationError.cannotAddOutput
         }
     }
+#endif
     
     private func startSessionIfPossible() {
         switch self.setupResult {
@@ -303,9 +308,11 @@ class StreamCaptureManager {
         videoOutput.setSampleBufferDelegate(delegate, queue: videoOutputQueue)
     }
     
+#if !os(visionOS)
     // AudioOutputDelegate
     func setAudioOutputDelegate(with delegate: AVCaptureAudioDataOutputSampleBufferDelegate) {
         audioOutput.setSampleBufferDelegate(delegate, queue: audioOutputQueue)
     }
+#endif
 }
 
