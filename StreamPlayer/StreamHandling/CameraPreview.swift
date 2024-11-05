@@ -5,6 +5,8 @@
 //  Created by InRaysee on 2024/7/5.
 //
 
+#if !os(visionOS)
+
 import SwiftUI
 import AVFoundation
 
@@ -58,3 +60,5 @@ struct CameraPreview: UIViewRepresentable {
         // No implementation needed.
     }
 }
+
+#endif

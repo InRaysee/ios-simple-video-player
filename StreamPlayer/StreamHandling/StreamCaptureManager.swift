@@ -114,19 +114,22 @@ class StreamCaptureManager {
         
         session.beginConfiguration()
         
-        if session.canSetSessionPreset(.iFrame1280x720) {
-            session.sessionPreset = .iFrame1280x720
-        }
+#if os(iOS) || os(tvOS) || targetEnvironment(macCatalyst)
+            if session.canSetSessionPreset(.iFrame1280x720) {
+                session.sessionPreset = .iFrame1280x720
+            }
+#endif
         
         do {
             // Video
             try addVideoDeviceInputToSession(device: videoDevice)
             try addVideoOutputToSession()
             
+#if os(iOS) || os(tvOS) || targetEnvironment(macCatalyst)
 //            ForEach(session.connections) { connection in
 //                connection.videoRotationAngle = 90
 //            }
-            
+//            
 //            if let connection = session.connections.first {
 //                connection.videoRotationAngle = 90
 //            }
@@ -138,6 +141,7 @@ class StreamCaptureManager {
                 try addAudioDeviceInputToSession(device: audioDevice)
                 try addAudioOutputToSession()
             }
+#endif
         } catch {
             print("error ocurred : \(error.localizedDescription)")
             return
@@ -155,16 +159,46 @@ class StreamCaptureManager {
                 print("The selected video device is activated.")
                 defaultVideoDevice = selectedDevice
             }
-            // camera devices you can use vary depending on which iPhone you are
-            // using so we want to
-            else if let dualCameraDevice = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back) {
-                defaultVideoDevice = dualCameraDevice
-            } else if let dualWideCameraDevice = AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back) {
-                defaultVideoDevice = dualWideCameraDevice
-            } else if let backCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
-                defaultVideoDevice = backCameraDevice
-            } else if let frontCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
-                defaultVideoDevice = frontCameraDevice
+            else {
+                // camera devices you can use vary depending on which iPhone you are
+                // using so we want to
+                #if os(iOS) || targetEnvironment(macCatalyst) || os(tvOS)
+                if let wideAngleCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+                    defaultVideoDevice = wideAngleCameraDevice
+                } else if let ultraWideCameraDevice = AVCaptureDevice.default(.builtInUltraWideCamera, for: .video, position: .back) {
+                    defaultVideoDevice = ultraWideCameraDevice
+                } else if let telephotoCameraDevice = AVCaptureDevice.default(.builtInTelephotoCamera, for: .video, position: .back) {
+                    defaultVideoDevice = telephotoCameraDevice
+                } else if let dualCameraDevice = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back) {
+                    defaultVideoDevice = dualCameraDevice
+                } else if let dualWideCameraDevice = AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back) {
+                    defaultVideoDevice = dualWideCameraDevice
+                } else if let tripleCameraDevice = AVCaptureDevice.default(.builtInTripleCamera, for: .video, position: .back) {
+                    defaultVideoDevice = tripleCameraDevice
+                } else if let continuityCameraDevice = AVCaptureDevice.default(.continuityCamera, for: .video, position: .back) {
+                    defaultVideoDevice = continuityCameraDevice
+                } else if let liDARDepthCameraDevice = AVCaptureDevice.default(.builtInLiDARDepthCamera, for: .video, position: .back) {
+                    defaultVideoDevice = liDARDepthCameraDevice
+                } else if let trueDepthCameraDevice = AVCaptureDevice.default(.builtInTrueDepthCamera, for: .video, position: .back) {
+                    defaultVideoDevice = trueDepthCameraDevice
+                }
+                #endif
+                
+                #if os(macOS)
+                if let wideAngleCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+                    defaultVideoDevice = wideAngleCameraDevice
+                } else if let continuityCameraDevice = AVCaptureDevice.default(.continuityCamera, for: .video, position: .back) {
+                    defaultVideoDevice = continuityCameraDevice
+                } else if let deskViewCameraDevice = AVCaptureDevice.default(.deskViewCamera, for: .video, position: .back) {
+                    defaultVideoDevice = deskViewCameraDevice
+                }
+                #endif
+                
+                #if os(visionOS)
+                if let wideAngleCameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+                    defaultVideoDevice = wideAngleCameraDevice
+                }
+                #endif
             }
             
             guard let videoDevice = defaultVideoDevice else {

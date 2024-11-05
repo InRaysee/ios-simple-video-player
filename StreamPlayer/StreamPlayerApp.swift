@@ -30,5 +30,6 @@ struct StreamPlayerApp: App {
             ContentView()
         }
         .modelContainer(sharedModelContainer)
+        .defaultSize(CGSize(width: 900, height: 1950))
     }
 }
