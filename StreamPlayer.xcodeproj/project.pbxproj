@@ -39,6 +39,7 @@
 		9406EC912CDDB0B400E780A6 /* rtpTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9406EC902CDDB0B400E780A6 /* rtpTestView.swift */; };
 		9406EC932CDDBCCF00E780A6 /* RTPPaser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9406EC922CDDBCCE00E780A6 /* RTPPaser.swift */; };
 		9406EC952CDDBFE100E780A6 /* RTPUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9406EC942CDDBFE100E780A6 /* RTPUtils.swift */; };
+		9406EC972CE6D63900E780A6 /* UDPUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9406EC962CE6D63900E780A6 /* UDPUtils.swift */; };
 		9E2776032CC79E7900312E14 /* DeviceSelectionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */; };
 		9E6B30292CC7D95000DB5226 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */; };
 		9E9FB4B02CD4DE76003824C1 /* ACCEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9FB4AF2CD4DE76003824C1 /* ACCEncoder.swift */; };
@@ -78,6 +79,7 @@
 		9406EC902CDDB0B400E780A6 /* rtpTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = rtpTestView.swift; sourceTree = "<group>"; };
 		9406EC922CDDBCCE00E780A6 /* RTPPaser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTPPaser.swift; sourceTree = "<group>"; };
 		9406EC942CDDBFE100E780A6 /* RTPUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTPUtils.swift; sourceTree = "<group>"; };
+		9406EC962CE6D63900E780A6 /* UDPUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPUtils.swift; sourceTree = "<group>"; };
 		9E2776022CC79E7900312E14 /* DeviceSelectionDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSelectionDetail.swift; sourceTree = "<group>"; };
 		9E6972A92CC7F63300E32C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9E6B30282CC7D95000DB5226 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 			children = (
 				691E56D22C36A46A0077B853 /* TCPServer.swift */,
 				691E56C22C369B1C0077B853 /* TCPClient.swift */,
+				9406EC962CE6D63900E780A6 /* UDPUtils.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -261,6 +264,7 @@
 				691E56C72C369B3B0077B853 /* H264Encoder.swift in Sources */,
 				691E56DB2C36B4A20077B853 /* WebrtcPlayer.swift in Sources */,
 				691E56D62C36A4880077B853 /* NALUParser.swift in Sources */,
+				9406EC972CE6D63900E780A6 /* UDPUtils.swift in Sources */,
 				691E56C32C369B1C0077B853 /* TCPClient.swift in Sources */,
 				9E6B30292CC7D95000DB5226 /* DocumentPickerView.swift in Sources */,
 				691E56D12C36A44D0077B853 /* StreamServer.swift in Sources */,
