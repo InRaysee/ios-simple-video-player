@@ -73,7 +73,7 @@ class UDPReceiver {
                 print("Error receiving data: \(error)")
                 return
             }
-            
+
             if let data = data {
                 // 调用回调函数处理接收到的数据
                 self?.recievedDataHandling?(data)

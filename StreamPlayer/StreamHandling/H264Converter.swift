@@ -19,7 +19,7 @@ class H264Converter {
     private var sps: H264Unit?
     private var pps: H264Unit?
     
-    private var description: CMVideoFormatDescription?
+    var description: CMVideoFormatDescription?
     
     var sampleBufferCallback: ((CMSampleBuffer) -> Void)?
     
@@ -39,7 +39,7 @@ class H264Converter {
               let sampleBuffer = createSampleBuffer(with: blockBuffer) else {
             return
         }
-        
+        print("h26converter executed")
         sampleBufferCallback?(sampleBuffer)
     }
     
@@ -138,5 +138,53 @@ class H264Converter {
                                                             parameterSetSizes: parameterSetSizes,
                                                             nalUnitHeaderLength: 4,
                                                             formatDescriptionOut: &description)
+    }
+    
+    func setCVFormatDescription(){
+        //        CMVideoFormatDescriptionCreate(allocator: kCFAllocatorDefault,
+        //                                       codecType: kCMVideoCodecType_H264,
+        //                                       width: 3840, height: 2160,
+        //                                       extensions: nil,
+        //                                       formatDescriptionOut: &description)
+        
+        // extract sps and pps info from sdp coded base64
+        let spsBase64 = "Z2QAKKy0A8ARPy4C1AQEBQAAAwPpAADqYI8YMqA="
+        let ppsBase64 = "aO88sA=="
+        
+        // decode
+        guard let spsData = Data(base64Encoded: spsBase64),
+              let ppsData = Data(base64Encoded: ppsBase64) else {
+            print("Failed to decode Base64 SPS or PPS")
+            return
+        }
+        
+        // create Format Description
+        
+        let spsPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: spsData.count)
+        spsData.copyBytes(to: spsPointer, count: spsData.count)
+        
+        let ppsPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: ppsData.count)
+        ppsData.copyBytes(to: ppsPointer, count: ppsData.count)
+                
+        let parameterSets = [UnsafePointer(spsPointer), UnsafePointer(ppsPointer)]
+        
+        let parameterSetSizes: [Int] = [spsData.count, ppsData.count]
+        
+        var formatDescription: CMFormatDescription?
+        let status = CMVideoFormatDescriptionCreateFromH264ParameterSets(
+            allocator: kCFAllocatorDefault,
+            parameterSetCount: parameterSets.count,
+            parameterSetPointers: parameterSets,
+            parameterSetSizes: parameterSetSizes,
+            nalUnitHeaderLength: 4, // NAL unit lenth
+            formatDescriptionOut: &formatDescription
+        )
+        
+        if status == noErr, let formatDescription = formatDescription {
+            self.description = formatDescription
+            print("Successfully created mock CMVideoFormatDescription")
+        } else {
+            print("Failed to create mock CMVideoFormatDescription: \(status)")
+        }
     }
 }

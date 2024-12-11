@@ -32,7 +32,7 @@ struct ContentView: View {
                     }
                     .tag(1)
                 
-                WebrtcMediaPage(size: size, safeArea: safeArea)
+                rtpTestView()
                     .preferredColorScheme(.none)
                     .tabItem {
                         Label("Chat", systemImage: "livephoto")

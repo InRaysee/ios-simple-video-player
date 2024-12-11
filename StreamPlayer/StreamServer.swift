@@ -79,6 +79,7 @@ class StreamWithUdp {
     private var server:UDPReceiver?
     private var naluParser: NALUParser?
     private var h264Converter: H264Converter?
+    private var rtpPaser : RTPPaser?
     
     @Binding var isPlaying: Bool
     @Binding var endPoint: String
@@ -93,7 +94,11 @@ class StreamWithUdp {
         do {
             try self.start(on: 12005)
             self.setSampleBufferCallback { [layer] sample in
+                self.logSampleBufferInfo(sample, context: "Before enqueue")
+                
                 layer.enqueue(sample)
+                
+                self.logSampleBufferInfo(sample, context: "after enqueue")
                 self.isPlaying = true
             }
         } catch {
@@ -107,9 +112,12 @@ class StreamWithUdp {
         server = UDPReceiver(endPoint: self.$endPoint)
         naluParser = NALUParser()
         h264Converter = H264Converter()
+        rtpPaser = RTPPaser()
+        h264Converter?.setCVFormatDescription()
         
         try server?.start(onPort: port)
         
+        setRTPParserHandling()
         setServerDataHandling()
         setNALUParserHandling()
     }
@@ -120,8 +128,8 @@ class StreamWithUdp {
     
     // MARK: - helper methods
     private func setServerDataHandling() {
-        server?.recievedDataHandling = { [naluParser] data in
-            naluParser?.enqueue(data)
+        server?.recievedDataHandling = { [rtpPaser] data in
+            rtpPaser?.enqueue(data)
         }
     }
 //    private func setServerDataHandling() {
@@ -130,9 +138,39 @@ class StreamWithUdp {
 //        }
 //    }
     
+    private func setRTPParserHandling(){
+        rtpPaser?.rtpUnitHandling = { [naluParser] data in
+            naluParser?.enqueue(data.payload)
+        }
+    }
+    
     private func setNALUParserHandling() {
         naluParser?.h264UnitHandling = { [h264Converter] h264Unit in
             h264Converter?.convert(h264Unit)
         }
     }
+    
+    private func logSampleBufferInfo(_ sampleBuffer: CMSampleBuffer, context: String) {
+        guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else {
+            print("[\(context)] No Format Description.")
+            return
+        }
+        
+        let dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription)
+        let timingInfo = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        
+        print("[\(context)] SampleBuffer Info:")
+        print(" - Width: \(dimensions.width)")
+        print(" - Height: \(dimensions.height)")
+        print(" - Presentation Time: \(timingInfo.seconds) seconds")
+        
+        if let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[CFString: Any]] {
+            for (index, attachment) in attachments.enumerated() {
+                print(" - Attachment \(index): \(attachment)")
+            }
+        } else {
+            print(" - No Attachments Found")
+        }
+    }
+
 }

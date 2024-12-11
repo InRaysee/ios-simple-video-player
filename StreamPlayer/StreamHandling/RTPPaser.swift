@@ -237,3 +237,29 @@ public struct Extension: Sendable {
  |                             ....                              |
 
  */
+
+class RTPPaser{
+    private var dataStream = Data()
+    
+    private lazy var parsingQueue = DispatchQueue.init(label: "rtpParsing.queue", qos: .userInteractive)
+    
+    var rtpUnitHandling : ((Packet) -> Void)?
+    
+    //this function extract nalu stream (expectedly) from rtp stream
+    //since we are extract packet from udp stream, every single udp packet contains one rtp packet ?
+    func enqueue(_ data: Data) {
+        do {
+            let pkt = try Packet(from: data)
+            
+//            print("formatting rtp packet from udp")
+            
+            parsingQueue.async { [unowned self] in
+                rtpUnitHandling?(pkt)
+            }
+        } catch {
+            print("format rtp packet error!")
+            return // 直接退出函数
+        }
+    }
+
+}
