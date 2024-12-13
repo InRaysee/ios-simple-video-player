@@ -7,8 +7,8 @@
 
 import Foundation
 
-// Packet represents an individual RTP packet.
-public struct Packet: Sendable {
+// RtpPacket represents an individual RTP packet.
+public struct RtpPacket: Sendable {
     static let version: UInt8 = 2
     static let versionMask: UInt8 = 0b1100_0000
     static let paddingMask: UInt8 = 0b0010_0000
@@ -129,7 +129,10 @@ public struct Packet: Sendable {
         if data.count - payloadOffset - Int(padding) < 0 {
             throw EncodingError.paddingTooLarge(padding)
         }
-        payload = data[payloadOffset...]
+        
+        
+        // create new instance to reset the start offset
+        payload = Data(data[payloadOffset...])
     }
 
 //    public func encode() -> Data {
@@ -243,22 +246,27 @@ class RTPPaser{
     
     private lazy var parsingQueue = DispatchQueue.init(label: "rtpParsing.queue", qos: .userInteractive)
     
-    var rtpUnitHandling : ((Packet) -> Void)?
+    var rtpUnitHandling : ((RtpPacket) -> Void)?
     
     //this function extract nalu stream (expectedly) from rtp stream
     //since we are extract packet from udp stream, every single udp packet contains one rtp packet ?
     func enqueue(_ data: Data) {
         do {
-            let pkt = try Packet(from: data)
+            let pkt = try RtpPacket(from: data)
             
 //            print("formatting rtp packet from udp")
             
             parsingQueue.async { [unowned self] in
                 rtpUnitHandling?(pkt)
+                
+                
+//                rtpPaser?.rtpUnitHandling = { [naluParser] data in
+//                    naluParser?.enqueue(data.payload)
+//                }
             }
         } catch {
             print("format rtp packet error!")
-            return // 直接退出函数
+            return  // error occurred
         }
     }
 

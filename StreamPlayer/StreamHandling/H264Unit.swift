@@ -35,7 +35,9 @@ struct H264Unit {
     
     /// - paramter payload: pure NALU data(no length data or start code)
     init(payload: Data) {
-        let typeNumber = payload[0] & 0x1F
+        let offset = payload.startIndex
+        
+        let typeNumber = payload[0+offset] & 0x1F
         
         if typeNumber == 7 {
             self.type = .sps
@@ -49,7 +51,11 @@ struct H264Unit {
             
             self.lengthData = Data(bytes: &naluLength, count: 4)
         }
+        if offset != 0 {
+            self.payload = Data(payload)
+        }else{
+            self.payload = payload
+        }
         
-        self.payload = payload
     }
 }

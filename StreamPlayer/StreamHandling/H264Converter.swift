@@ -176,7 +176,7 @@ class H264Converter {
             parameterSetCount: parameterSets.count,
             parameterSetPointers: parameterSets,
             parameterSetSizes: parameterSetSizes,
-            nalUnitHeaderLength: 4, // NAL unit lenth
+            nalUnitHeaderLength: 1, // NAL unit lenth
             formatDescriptionOut: &formatDescription
         )
         

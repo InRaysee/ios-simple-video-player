@@ -25,6 +25,9 @@ class NALUParser {
     /// callback when a NALU is seperated from data stream
     var h264UnitHandling: ((H264Unit) -> Void)?
     
+    private var fragmentBuffer = [UInt16: Data]() // To store FU-A fragments keyed by RTP sequence number
+    private var lastSequenceNumber: UInt16?
+    
     /// receives NALU stream data and parse it then call 'h264UnitHandling'
     func enqueue(_ data: Data) {
         print("nalparser being executed")
@@ -54,4 +57,129 @@ class NALUParser {
             }
         }
     }
+    
+    //this function used to parse rtp formatting nal stream
+    func enqueue(_ data: RtpPacket) {
+        print("NALUParser being executed")
+        
+        parsingQueue.async { [unowned self] in
+            guard data.payload.count > 0 else {
+                print("Invalid RTP packet payload")
+                return
+            }
+            let payload = data.payload
+            let nalHeaderIndex = payload.startIndex
+            let nalHeader = payload[nalHeaderIndex]
+            let nalType = nalHeader & 0x1F // Extract NAL unit type
+            
+            switch nalType {
+            case 1...23:
+                // Single NAL unit packet
+                self.handleSingleNALUnit(payload)
+                
+            case 24:
+                // STAP-A (Single-Time Aggregation Packet)
+                self.handleStapA(payload)
+                
+            case 28:
+                // FU-A (Fragmentation Unit)
+                self.handleFuA(payload, sequenceNumber: data.sequenceNumber)
+                
+            default:
+                print("Unsupported NAL unit type: \(nalType)")
+            }
+        }
+    }
+    private func handleSingleNALUnit(_ payload: Data) {
+        // Directly pass the payload as a complete NAL unit
+        let h264unit = H264Unit(payload: payload)
+        h264UnitHandling?(h264unit)
+    }
+    
+    private func handleStapA(_ payload: Data) {
+        
+        var offset = 1 // Skip the NAL header
+        while offset < payload.count {
+            guard offset + 2 <= payload.count else {
+                print("Malformed STAP-A packet")
+                return
+            }
+            
+            // Read NAL unit size (2 bytes, big-endian)
+            let nalSize = Int(payload[offset]) << 8 | Int(payload[offset + 1])
+            offset += 2
+            
+            guard offset + nalSize <= payload.count else {
+                print("Malformed STAP-A packet")
+                return
+            }
+            
+            // Extract NAL unit
+            let nalUnit = payload[offset..<(offset + nalSize)]
+            let h264unit = H264Unit(payload: nalUnit)
+            h264UnitHandling?(h264unit)
+            offset += nalSize
+        }
+    }
+    
+    private func handleFuA(_ payload: Data, sequenceNumber: UInt16) {
+        guard payload.count > 2 else {
+            print("Malformed FU-A packet")
+            return
+        }
+        
+        let fuHeader = payload[1]
+        let startBit = fuHeader & 0x80 > 0
+        let endBit = fuHeader & 0x40 > 0
+        let nalType = fuHeader & 0x1F
+        
+        if startBit {
+            // Start of a fragmented NAL unit
+            let reconstructedNALHeader = (payload[0] & 0xE0) | nalType
+            fragmentBuffer = [sequenceNumber: Data([reconstructedNALHeader] + payload[2...])]
+            lastSequenceNumber = sequenceNumber
+        } else if let lastSeq = lastSequenceNumber, sequenceNumber == lastSeq + 1 {
+            // Continuation of the fragmented NAL unit
+            fragmentBuffer[sequenceNumber] = payload[2...]
+            lastSequenceNumber = sequenceNumber
+            
+            if endBit {
+                // End of the fragmented NAL unit
+                let fullNALUnit = fragmentBuffer
+                    .sorted { $0.key < $1.key } // Sort by sequence number
+                    .compactMap { $0.value } // Extract data
+                    .reduce(Data(), +) // Concatenate all parts
+                
+                let h264unit = H264Unit(payload: fullNALUnit)
+                h264UnitHandling?(h264unit)
+                fragmentBuffer.removeAll()
+                lastSequenceNumber = nil
+            }
+        } else {
+            // Packet loss or out-of-order packet, drop the fragmented NAL unit
+            print("Packet loss or out-of-order detected in FU-A sequence")
+            fragmentBuffer.removeAll()
+            lastSequenceNumber = nil
+        }
+    }
+    
+    
 }
+
+
+//extension Data {
+//    subscript(safeOffset offset: Int) -> UInt8? {
+//        let index = self.index(self.startIndex, offsetBy: offset, limitedBy: self.endIndex)
+//        return index.map { self[$0] }
+//    }
+//    
+//    subscript(safeRange range: Range<Int>) -> Data? {
+//        let lowerIndex = self.index(self.startIndex, offsetBy: range.lowerBound, limitedBy: self.endIndex)
+//        let upperIndex = self.index(self.startIndex, offsetBy: range.upperBound, limitedBy: self.endIndex)
+//        if let lower = lowerIndex, let upper = upperIndex, lower <= upper {
+//            return self[lower..<upper]
+//        }
+//        return nil
+//    }
+//}
+//

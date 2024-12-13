@@ -98,7 +98,7 @@ class StreamWithUdp {
                 
                 layer.enqueue(sample)
                 
-                self.logSampleBufferInfo(sample, context: "after enqueue")
+//                self.logSampleBufferInfo(sample, context: "after enqueue")
                 self.isPlaying = true
             }
         } catch {
@@ -140,7 +140,7 @@ class StreamWithUdp {
     
     private func setRTPParserHandling(){
         rtpPaser?.rtpUnitHandling = { [naluParser] data in
-            naluParser?.enqueue(data.payload)
+            naluParser?.enqueue(data)
         }
     }
     
